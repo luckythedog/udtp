@@ -1,16 +1,3 @@
-/* Taylor Schutt
- * 
- * getting an avarage score
- * 
- * make 5 score variables all data type double
- * make 1 for sum of variables data type double
- * make 1 for avarage of the 5 scores
- * ask for 5 decimal numbers
- * tell code to wait for 5 inputs from user
- * after 5 input have been entered, add them together
- * then diveide the sum by 5
- * then print average
- * */
 #include <iostream>
 #include <fstream>
 #include <iomanip>
@@ -25,17 +12,19 @@ vector<char*> split;
 vector<int> split_this_shit;
 
 int main(int argc, char* argv[]){
-	
+
 	ifstream open_file("logo_myDog.png", ios::binary);
 		int file_size;
 	char* fucking_file_data = new char[46028];
 	if(open_file.is_open()){
 		open_file.seekg(0, open_file.end);
+		cout << "Successfully opened file." << endl;
 		cout << open_file.tellg() << endl;
 		file_size = open_file.tellg();
 		cout << file_size << endl;
 		//Let's find how many files there are
 		int packets = (open_file.tellg()/SPLIT_SIZE);
+		open_file.seekg(0, open_file.beg);
 		cout << packets << endl;
 		for(int i=0; i<=packets; i++){
 			int packet_size = (SPLIT_SIZE>=(open_file.end - open_file.tellg())?SPLIT_SIZE:(open_file.end - open_file.tellg()));
@@ -45,30 +34,19 @@ int main(int argc, char* argv[]){
 			split.push_back(read_data);
 			split_this_shit.push_back(put_this_shit);
 		}
-		/*
-		if((open_file.tellg() % SPLIT_SIZE) >= 1) {
-			int secret_size = (open_file.tellg() % SPLIT_SIZE);
-			char* read_data = new char[secret_size];
-			open_file.read(read_data, secret_size);
-			split.push_back(read_data);
-			
-		}*/
+		unsigned int offset = 0;
 		for(int i=0; i<=packets; i++){
-			memcpy(&fucking_file_data[i], split[i], split_this_shit[i]);
-			cout.write(&fucking_file_data[i],split_this_shit[i]);
-			cout << " - ";
-			cout.write((char *)split[i],split_this_shit[i]);
-			cout << endl;
+			memcpy(&fucking_file_data[offset], split[i], split_this_shit[i]);
+			offset += split_this_shit[i];
 		}
 
 	}
 
-	ofstream out_file("finally.png", ios::binary);
+	ofstream out_file("finally.png", ofstream::binary);
 	if(out_file.is_open()){
-		cout << file_size << endl;
-		out_file.write(fucking_file_data,file_size);
+		out_file.write(&fucking_file_data[0],file_size);
 	}
 	open_file.close();
-	
-	
+	out_file.close();
+	cin.get();
 }
