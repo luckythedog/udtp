@@ -1,0 +1,119 @@
+# depslib dependency file v1.0
+1391910281 source:/home/lucky/workspace/UDTP/main.cpp
+	<iostream>
+	<cstring>
+	"UDTP.h"
+
+1391926466 source:/home/lucky/workspace/UDTP/UDTP.cpp
+	"UDTP.h"
+	"UDTPPacket.h"
+	"UDTPData.h"
+	"UDTPPath.h"
+	"UDTPFile.h"
+	"UDTPHeader.h"
+	"UDTPChunk.h"
+	"UDTPWhine.h"
+	"UDTPHandshake.h"
+
+1391924972 source:/home/lucky/workspace/UDTP/UDTPData.cpp
+	"UDTPData.h"
+	"UDTPPath.h"
+	"UDTPHeader.h"
+	"UDTPChunk.h"
+	"UDTPWhine.h"
+	"UDTPHandshake.h"
+
+1391881549 source:/home/lucky/workspace/UDTP/UDTPSetup.cpp
+
+1391926476 /home/lucky/workspace/UDTP/UDTP.h
+	<vector>
+	<cstring>
+	<queue>
+	<poll.h>
+	<pthread.h>
+	<sys/types.h>
+	<sys/socket.h>
+	<sys/time.h>
+	<semaphore.h>
+	<netinet/in.h>
+	<arpa/inet.h>
+	<winsocks.h>
+	<windows.h>
+	"UDTPSettings.h"
+	"UDTPSetup.h"
+
+1391924965 /home/lucky/workspace/UDTP/UDTPData.h
+	<iostream>
+	"UDTPPacket.h"
+	<cstring>
+
+1391918878 /home/lucky/workspace/UDTP/UDTPSetup.h
+	<string>
+	"UDTPSettings.h"
+
+1391913718 /home/lucky/workspace/UDTP/UDTPConfig.h
+
+1391926459 /home/lucky/workspace/UDTP/UDTPPacket.h
+
+1391914196 source:/home/lucky/workspace/UDTP/UDTPPath.cpp
+	"UDTPPath.h"
+	"UDTPData.h"
+
+1391914194 /home/lucky/workspace/UDTP/UDTPPath.h
+	<string>
+	<iostream>
+	"UDTPPacket.h"
+
+1391886039 /home/lucky/workspace/UDTP/UDTPPacketDefintions.h
+	"UDTPPacket.h"
+	"UDTPData.h"
+	"UDTPPath.h"
+
+1391926261 source:/home/lucky/workspace/UDTP/UDTPHeader.cpp
+	"UDTPHeader.h"
+	"UDTPData.h"
+	"UDTPFile.h"
+	"UDTPPath.h"
+
+1391926218 /home/lucky/workspace/UDTP/UDTPHeader.h
+	"UDTPPacket.h"
+
+1391914416 /home/lucky/workspace/UDTP/UDTPChunk.h
+	"UDTPPacket.h"
+
+1391914667 /home/lucky/workspace/UDTP/UDTPWhine.h
+	"UDTPPacket.h"
+
+1391914137 source:/home/lucky/workspace/UDTP/UDTPFile.cpp
+	"UDTPFile.h"
+	"UDTPPath.h"
+	"UDTPChunk.h"
+	"UDTPHeader.h"
+	"UDTPSettings.h"
+
+1391913267 /home/lucky/workspace/UDTP/UDTPFile.h
+	<queue>
+	<vector>
+	<fstream>
+	<ctime>
+
+1391914689 source:/home/lucky/workspace/UDTP/UDTPChunk.cpp
+	"UDTPChunk.h"
+	"UDTPWhine.h"
+	"UDTPData.h"
+
+1391924309 /home/lucky/workspace/UDTP/UDTPSettings.h
+	<climits>
+
+1391914671 source:/home/lucky/workspace/UDTP/UDTPWhine.cpp
+	"UDTPWhine.h"
+	"UDTPData.h"
+
+1391924200 source:/home/lucky/workspace/UDTP/UDTPHandshake.cpp
+	"UDTPHandshake.h"
+	"UDTPData.h"
+
+1391924164 /home/lucky/workspace/UDTP/UDTPHandshake.h
+	<stdint.h>
+	"UDTPPacket.h"
+
