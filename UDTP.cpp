@@ -13,7 +13,7 @@
 #include "UDTPAddress.h"
 #include "UDTPPeer.h"
 #include <fstream>
-#define EMPTY_PATH ""
+#define EMPTYPATH 0x00
 
 SocketReturn UDTP::start(SocketType socketType)
 {
@@ -186,19 +186,19 @@ bool UDTP::process_path(UDTPPath& readPath)
     case ResponseFileNotFound:
         break;
     case ResponseNone: /*You're getting a request!*/
-        if(readPath.get_filename() == EMPTY_PATH )
+        if(readPath.get_filename() == EMPTYPATH )
         {
-            if(readPath.get_directory() == EMPTY_PATH)  /*Invalid path*/
+            if(readPath.get_directory() == EMPTYPATH)  /*Invalid path*/
             {
                 readPath.set_response_code(ResponseInvalidPath);
             }
-            if(readPath.get_directory() != EMPTY_PATH)  /*Directory request*/
+            if(readPath.get_directory() != EMPTYPATH)  /*Directory request*/
             {
                 readPath.set_response_code(ResponseListingFound);
                 /*Do some directory listing in this shit and put it in readPath's returnPath member variable*/
             }
         }
-        if(readPath.get_filename() != EMPTY_PATH)  /*Means it is an individual file!*/
+        if(readPath.get_filename() != EMPTYPATH)  /*Means it is an individual file!*/
         {
             /*Open a filestream using _settings.get_root_directory() + readPath.get_directory() + readPath.get_filename();
             Then respond with a ResponseFileNotFound, ResponseFileAlreadyExists or something*/
