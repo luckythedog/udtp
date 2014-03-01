@@ -3,7 +3,7 @@
 #include "UDTPPath.h"
 #include "UDTPHeader.h"
 #include "UDTPChunk.h"
-#include "UDTPWhine.h"
+#include "UDTPAcknowledge.h"
 #include "UDTPHandshake.h"
 
 
@@ -21,7 +21,7 @@ UDTPData::UDTPData(UDTPHeader& header){
 }
 UDTPData::UDTPData(UDTPChunk& chunk){
 }
-UDTPData::UDTPData(UDTPWhine& whine){
+UDTPData::UDTPData(UDTPAcknowledge& whine){
 }
 UDTPData::UDTPData(UDTPHandshake& handshake){
 }

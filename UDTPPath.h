@@ -18,6 +18,7 @@ class UDTPData;
 
 class UDTPPath : public UDTPPacket{
     public:
+        UDTPPath();
         UDTPPath(UDTPData& data);
 
         UDTPPath(std::string addressPath) { /*Creates a new path from a string.*/

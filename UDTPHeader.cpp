@@ -13,7 +13,7 @@ UDTPHeader::UDTPHeader(UDTPData& data){
 UDTPHeader::UDTPHeader(HeaderType headerType, UDTPFile* file) {
     _headerType = headerType; /*Set header type*/
     _responseCode = ResponseNone; /*Set to unfulfilled response code*/
-    _fileIdentifier = 0; /*File identifier is always zero when sending out a request*/
+    _fileID = 0; /*File identifier is always zero when sending out a request*/
     switch(headerType){
         case HeaderPull:
         file->set_info_to_zero(); /*Set information to zero*/

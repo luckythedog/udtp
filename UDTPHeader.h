@@ -24,8 +24,8 @@ class UDTPHeader : public UDTPPacket{
         ResponseCode get_response_code(){ return _responseCode;};
         bool set_response_code(ResponseCode responseCode) { responseCode = _responseCode;};
 
-        unsigned short get_file_identifier() { return _fileIdentifier;};
-        bool set_file_identifier(unsigned short fileIdentifier) { _fileIdentifier = fileIdentifier;}; /*sets the file identifier*/
+        unsigned short get_file_id() { return _fileID;};
+        bool set_file_id(unsigned short fileID) { _fileID = fileID;}; /*sets the file identifier*/
 
         unsigned short get_number_of_chunks() { return _numberOfChunks;};
         bool set_number_of_chunks(unsigned short numberOfChunks) { _numberOfChunks = numberOfChunks;};
@@ -39,7 +39,7 @@ class UDTPHeader : public UDTPPacket{
 
     private:
         UDTPPath* _pathOfFile;
-        unsigned short _fileIdentifier;
+        unsigned short _fileID;
         unsigned short _numberOfChunks;
         unsigned int _sizeOfFile;
 

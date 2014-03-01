@@ -37,12 +37,17 @@
 		</Linker>
 		<Unit filename="UDTP.cpp" />
 		<Unit filename="UDTP.h" />
+		<Unit filename="UDTPAcknowledge.cpp" />
+		<Unit filename="UDTPAcknowledge.h" />
+		<Unit filename="UDTPAddress.h" />
 		<Unit filename="UDTPChunk.cpp" />
 		<Unit filename="UDTPChunk.h" />
 		<Unit filename="UDTPData.cpp" />
 		<Unit filename="UDTPData.h" />
 		<Unit filename="UDTPFile.cpp" />
 		<Unit filename="UDTPFile.h" />
+		<Unit filename="UDTPFlowThreadData.cpp" />
+		<Unit filename="UDTPFlowThreadData.h" />
 		<Unit filename="UDTPHandshake.cpp" />
 		<Unit filename="UDTPHandshake.h" />
 		<Unit filename="UDTPHeader.cpp" />
@@ -50,10 +55,10 @@
 		<Unit filename="UDTPPacket.h" />
 		<Unit filename="UDTPPath.cpp" />
 		<Unit filename="UDTPPath.h" />
+		<Unit filename="UDTPPeer.cpp" />
+		<Unit filename="UDTPPeer.h" />
 		<Unit filename="UDTPSettings.h" />
 		<Unit filename="UDTPSetup.h" />
-		<Unit filename="UDTPWhine.cpp" />
-		<Unit filename="UDTPWhine.h" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<code_completion />

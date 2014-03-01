@@ -25,15 +25,19 @@
 /*Include necessary libraries of UDTP*/
 #include "UDTPSettings.h"
 #include "UDTPSetup.h"
-
+class UDTPSetup;
 class UDTPPath;
 class UDTPFile;
 class UDTPData;
 class UDTPHeader;
 class UDTPChunk;
-class UDTPWhine;
+class UDTPAcknowledge;
 class UDTPHandshake;
+class UDTPFlowThreadData;
+class UDTPAddress;
+class UDTPPeer;
 
+class UDTP;
 
 enum SocketType
 {
@@ -64,44 +68,60 @@ enum TransferReturn
 class UDTP
 {
 public:
-
-    UDTP(UDTPSetup setup)   /*Default constructor for both client and server*/
+    UDTP(UDTPSetup settings)
     {
-        _setup = setup;
+        _initComplete = 0x00;
+        _settings = settings;
         _isAlive = false;
-        _fileIdentifierCount = 0;
-    };
+    }   /*Default constructor for both client and server*/
+
     SocketReturn start(SocketType socketType);
-    bool send_data(UDTPData& data);
+    bool start_flow_sockets(unsigned short withCount);
+    bool send_listen_data(UDTPData& data);
+    void send_flow_data(UDTPFlowThreadData* threadFlowData, UDTPData& data); //*Different types of sockets, Listen goes to TCP and Flow goes to UDP*/
+
+    SocketType get_socket_type() {
+        return _socketType;
+    }
+        bool alive(){
+        return _isAlive;
+    };
 
     TransferReturn send_file(UDTPPath addressPath);
     TransferReturn get_file(UDTPPath addressPath);
 
-    bool start_threads();
+    bool start_listen_thread();
+    bool start_flow_threads();
+    bool send_required_packets();
     bool process_handshake(UDTPHandshake& handshake);
     bool process_header(UDTPHeader& readHeader);
     bool process_path(UDTPPath& readPath);
     bool process_chunk(UDTPChunk& readChunk);
-    bool process_whine(UDTPWhine& readWhine);
-
+    bool process_acknowledge(UDTPAcknowledge& readAcknowledge);
+    static void* listenThreadFunc(void *args);
+    static void* flowThreadsFunc(void*);
+    static void* openFlowThread(void*);
 
     bool stop(); /*Stop server/client. This will eject anything and everything no matter what.*/
 private:
-    UDTPSetup _setup;
+    unsigned char _initComplete;
+
+    UDTPSetup _settings;
     SocketType _socketType;
     bool _isAlive; /*Is it running?*/
 
-    static void* listenThreadFunc(void*);
-    static void* flowThreadsFunc(void*);
+
+
     pthread_t _listenThread; /*There will be only one primary listen thread*/
-    pthread_t _flowThread; /*There will be numerous flow threads*/
+    std::vector<UDTPFlowThreadData*> _flowThreads; /*Flow thread holders*/
+    /*For server use only!*/
+    std::vector<UDTPPeer*> _listPeers; /*Peers that are connected, including themselves*/
 
-    unsigned short _listenSocket; /*Holds TCP socket*/
-    unsigned short _flowSocket; /*Holds UDP socket*/
+    /*Both server and client use this*/
+    unsigned int _listenSocket; /*Holds TCP socket*/
+    std::vector<unsigned int> _flowSockets; /*Holds UDP socket*/
 
 
-    /*Server dedicated member variables*/
-    unsigned short _fileIdentifierCount; /*Holds file identifier counts. This increments as each file goes on.*/
 
 };
 

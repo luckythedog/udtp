@@ -6,6 +6,9 @@ using namespace std;
 
 int main()
 {
-    cout << "Hello world!" << endl;
+    UDTPSetup MySetup(6666);
+    UDTP MyServer(MySetup);
+    MyServer.start(HOST);
+    while(MyServer.alive());
     return 0;
 }

@@ -11,38 +11,62 @@
 
 class UDTPSetup{
     public:
-    UDTPSetup();
+    UDTPSetup(){ };
         /*This creates a client UDTPSetup*/
-        UDTPSetup(std::string ipAddress, unsigned int port) {
-            _ipAddress = ipAddress;
+        UDTPSetup(std::string ip, unsigned int port) {
+            _ip = ip.c_str();
             _port = port;
-            _hasPassword = false;
+
         }
         /*This creates a server UDTPSetup, since servers really only need ports to start up*/
         UDTPSetup(unsigned int port){
             _port = port;
-             _hasPassword = false;
         }
 
-        const char* get_ip_address(){ return _ipAddress.c_str(); };
+        const char* get_ip(){ return _ip.c_str(); };
         unsigned int get_port() { return _port; };
 
-        bool set_ip_address(std::string ipAddress) { _ipAddress = ipAddress;};
+        bool set_ip(std::string ip) { _ip = ip;};
         bool set_port(unsigned int port) { _port = port; };
             /*Gettors for these are provided at UDTPSettings::get_chunk_size_agreement(), etc.*/
-        bool set_password(std::string password){_password = password;};
-        std::string get_password() { return _password;};
+
+
+        bool set_number_of_flow_sockets(unsigned short numOfFlowSockets) { UDTPSettings::NUMBER_OF_FLOW_SOCKETS = numOfFlowSockets;} /*Server use only!*/
+        bool get_number_of_flow_sockets() { return UDTPSettings::NUMBER_OF_FLOW_SOCKETS;};
+
+        bool set_number_of_threads(unsigned short numOfThreads) {
+            if(numOfThreads >= get_number_of_flow_sockets()){ /*Number of threads MUST be more than or equal to flow sockets*/
+            UDTPSettings::NUMBER_OF_THREADS  = numOfThreads;
+            return true;
+            }else{
+                return false;
+            }
+            };
+        unsigned short get_number_of_threads() { return UDTPSettings::NUMBER_OF_THREADS;};
+
+        bool set_min_chunk_size(unsigned short minChunkSize){ UDTPSettings::MIN_CHUNK_SIZE = minChunkSize; return true;};
+        unsigned short get_min_chunk_size() { return UDTPSettings::MIN_CHUNK_SIZE;};
+
+        bool set_max_chunk_size(unsigned short maxChunkSize){ UDTPSettings::MAX_CHUNK_SIZE = maxChunkSize;};
+        unsigned short get_max_chunk_size() { return UDTPSettings::MAX_CHUNK_SIZE;};
+
+        bool set_chunk_size_agreement(unsigned short chunkSizeAgreement){ UDTPSettings::CHUNK_SIZE_AGREEMENT = chunkSizeAgreement; return true;};
+        unsigned short get_chunk_size_agreement() { return UDTPSettings::CHUNK_SIZE_AGREEMENT;};
+
+        bool set_root_directory(std::string rootDirectory){ UDTPSettings::ROOT_DIRECTORY = rootDirectory; return true;};
+        std::string get_root_directory() { return UDTPSettings::ROOT_DIRECTORY;};
+
+        unsigned short get_version() { return UDTPSettings::VERSION_NUMBER;};
+
+        bool reset_file_id_count(){ UDTPSettings::FILE_ID_COUNT = 0; return true;};
+        unsigned short get_next_file_id(){
+            UDTPSettings::FILE_ID_COUNT++;
+            return UDTPSettings::FILE_ID_COUNT;
+        }
 
     private:
-        std::string _ipAddress;
+        std::string _ip;
         unsigned int _port;
-        std::string _password; /*Optional password for encrypting*/
-        bool _hasPassword;
-        /*Client related options*/
-        unsigned int _chunkSizeAgreement;
-        /*Server related options*/
-        unsigned int _maxChunkSize;
-        unsigned int _minChunkSize;
 };
 
 

@@ -1,7 +1,8 @@
 #include "UDTPPath.h"
 #include "UDTPData.h"
 
-
+UDTPPath::UDTPPath(){
+}
 UDTPPath::UDTPPath(UDTPData& data)
 {
 

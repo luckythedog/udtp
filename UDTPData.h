@@ -12,7 +12,7 @@
 class UDTPPath;
 class UDTPHeader;
 class UDTPChunk;
-class UDTPWhine;
+class UDTPAcknowledge;
 class UDTPHandshake;
 
 class UDTPData : public UDTPPacket {
@@ -23,19 +23,16 @@ class UDTPData : public UDTPPacket {
         UDTPData(UDTPPath& path);
         UDTPData(UDTPHeader& header);
         UDTPData(UDTPChunk& chunk);
-        UDTPData(UDTPWhine &whine);
+        UDTPData(UDTPAcknowledge &whine);
         UDTPData(UDTPHandshake& handshake);
 
         bool set_raw_buffer(char* raw){ _raw = raw; };
         char& write_to_buffer() {return  *_raw;};
         char* get_raw_buffer(); /*Retrieves transferable character buffer*/
 
-        unsigned int get_from_socket() { return _fromSocket;};
-        bool set_from_socket(unsigned int fromSocket) { _fromSocket = fromSocket;};
-
         unsigned short get_packet_size() { return _packetSize;};
     private:
-        unsigned int _fromSocket; /*Optional holder*/
+
         unsigned short _packetSize;
         char* _raw; /*This is the holder for raw data*/
     };

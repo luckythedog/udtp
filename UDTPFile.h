@@ -1,39 +1,28 @@
 #ifndef __UDTP_FILE
 #define __UDTP_FILE
-
 #include <queue>
 #include <vector>
 #include <fstream>
 #include <ctime>
-
+#include "UDTPChunk.h"
+#include "UDTPPath.h"
 class UDTPHeader;
-class UDTPChunk;
-class UDTPPath;
 
 
 class UDTPFile{
     public:
         UDTPFile();
         ~UDTPFile();
-        UDTPFile(UDTPPath& pathOfFile); /*Creates from a path only*/
+        UDTPFile(UDTPPath pathOfFile); /*Creates from a path only*/
 
-        bool process_header(UDTPHeader& header);
+        bool attach_header(UDTPHeader& header); /*Take information from a header and apply it to afile*/
 
         bool check_file_exist(); /*Checks if file exists or not. This is used by UDTP main api.*/
         bool set_info_to_zero(); /*Sets info to zero to prepare the UDTPFile to be engulfed by the UDTPHeader for pull*/
         bool retrieve_info_from_local_file();  /*Retrieves info from fstream to prepare the UDTPFile to be engulfed by the UDTPHeader for push*/
 
-        bool set_chunk_completed_true(unsigned short num){
-            if(num < 0 || num > _numberOfChunks) return false;
-            _chunksCompleted[num] = true;
-            return true;
-        }
-        bool empty_fill_chunks_completed(){ /*pushes numberOfChunks false bools into chunksCompleted vector. This should only RUN one time.*/
-            for(int i=0; i<_numberOfChunks; i++){
-                _chunksCompleted.push_back(false);
-            }
-            return true;
-        }
+        bool set_chunk_completed_true(unsigned short num);
+        bool empty_fill_chunks_completed();
         unsigned short amount_of_chunks_not_completed(); /*gets  amount of ones that are not completed*/
         unsigned short get_highest_chunk_completed(); /*gets the highest chunk completed. by highest it means in heirarchial order.*/
         std::vector<unsigned short> get_chunks_not_completed_up_to(unsigned short value); /* We would use get_highest_chunk_completed() then use it in this function.
@@ -41,8 +30,8 @@ class UDTPFile{
                                                                                                                 before #150 should also be completed. If not we'll whine them. Returns vector
                                                                                                                 of unsigned ints of the indexes that were false.*/
 
-        unsigned short get_file_identifier() { return _fileIdentifier;};
-        bool set_file_identifier(unsigned short fileIdentifier) {_fileIdentifier = fileIdentifier;};
+        unsigned short get_file_id() { return _fileID;};
+        bool set_file_id(unsigned short fileID) {_fileID = fileID;};
 
 
         unsigned short get_number_of_chunks() { return _numberOfChunks;};
@@ -60,8 +49,8 @@ class UDTPFile{
         /*Push commands*/
 
     private:
-        UDTPPath* _pathOfFile;
-        unsigned short _fileIdentifier;
+        UDTPPath _pathOfFile;
+        unsigned short _fileID;
         unsigned short _numberOfChunks;
         unsigned int _sizeOfFile;
 
