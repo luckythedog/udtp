@@ -1,32 +1,31 @@
 #include "UDTPPeer.h"
 #include "UDTPAddress.h"
+#include "UDTPFlowThreadData.h"
 
 UDTPPeer::~UDTPPeer()
 {
-
+    remove_all_flow_threads();
 }
 
 
-    bool UDTPPeer::add_address(sockaddr_in socketAddress){ //*Don't ever worry about removing them**/
-        UDTPAddress newAddress(socketAddress);
-        _addresses.push_back(newAddress);
-    }
-    bool UDTPPeer:: get_address_exist(sockaddr_in socketAddress){
-        UDTPAddress tempAddress(socketAddress);
-        for(int i=0; i<addresses_count(); i++){
-            if(_addresses[i].compare_with_address(tempAddress)) return true;
+
+bool UDTPPeer::add_flow_thread(pthread_t thread, unsigned int flowSocket, sockaddr_in socketAddress){
+        UDTPFlowThreadData* newFlowThread = new UDTPFlowThreadData(thread, flowSocket, socketAddress);
+        _flowThreads.push_back(newFlowThread);
+        return true;
+}
+    UDTPFlowThreadData* UDTPPeer::get_next_thread_link_needed() { /*Returns the next thread that needs a link, if all done.. then it is returned NULL!*/
+        for(unsigned int i=0; i<_flowThreads.size(); i++){
+            if(!_flowThreads[i]->is_linked()) return _flowThreads[i];
         }
-        return false;
+            return NULL;
+        };
+bool UDTPPeer::remove_all_flow_threads(){
+    for(unsigned int i=0; i<_flowThreads.size(); i++){
+
+        delete _flowThreads[i];
+        _flowThreads[i] = NULL;
     }
-    bool UDTPPeer:: get_address_exist(UDTPAddress& address){
-        for(int i=0; i<addresses_count(); i++){
-            if(_addresses[i].compare_with_address(address)) return true;
-        }
-        return false;
-    }
-UDTPAddress& UDTPPeer::operator[](const unsigned int index)
-{
-    if(index >= 0 && index < _addresses.size()){
-        return _addresses[index];
-    }
+    _flowThreads.clear();
+    return true;
 }

@@ -7,6 +7,7 @@
 #ifndef __UDTPSETUP
 #define __UDTPSETUP
 #include <string>
+#include <queue>
 #include "UDTPSettings.h"
 
 class UDTPSetup{
@@ -16,11 +17,12 @@ class UDTPSetup{
         UDTPSetup(std::string ip, unsigned int port) {
             _ip = ip.c_str();
             _port = port;
-
+            _currentPort = port;
         }
         /*This creates a server UDTPSetup, since servers really only need ports to start up*/
         UDTPSetup(unsigned int port){
             _port = port;
+            _currentPort = port;
         }
 
         const char* get_ip(){ return _ip.c_str(); };
@@ -58,7 +60,24 @@ class UDTPSetup{
 
         unsigned short get_version() { return UDTPSettings::VERSION_NUMBER;};
 
+        bool get_debug_enabled() { return UDTPSettings::DEBUG_ENABLED;};
+        bool set_debug_enabled(bool newValue) { UDTPSettings::DEBUG_ENABLED = newValue;};
+
+        bool add_available_port(unsigned int portReuse) { _reusablePorts.push(portReuse);};
+        unsigned int reuse_available_port() {
+            unsigned int portReuse = _reusablePorts.front();
+             _reusablePorts.pop();
+             return portReuse;
+             };
+        unsigned int get_next_available_port() {
+            if(!_reusablePorts.empty()) return reuse_available_port();
+                    unsigned int nextAvailablePort = _currentPort;
+                    _currentPort++;
+                    return nextAvailablePort;
+            };
+
         bool reset_file_id_count(){ UDTPSettings::FILE_ID_COUNT = 0; return true;};
+
         unsigned short get_next_file_id(){
             UDTPSettings::FILE_ID_COUNT++;
             return UDTPSettings::FILE_ID_COUNT;
@@ -67,6 +86,8 @@ class UDTPSetup{
     private:
         std::string _ip;
         unsigned int _port;
+        unsigned int _currentPort;
+        std::queue<unsigned int> _reusablePorts;
 };
 
 

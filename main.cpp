@@ -7,8 +7,12 @@ using namespace std;
 int main()
 {
     UDTPSetup MySetup(6666);
+    MySetup.set_debug_enabled(true);
     UDTP MyServer(MySetup);
-    MyServer.start(HOST);
-    while(MyServer.alive());
+    std::cout << MyServer.start(HOST) << std::endl;
+    UDTPSetup MyOtherSetup("127.0.0.1", 6666);
+    UDTP MyClient(MyOtherSetup);
+    std::cout << MyClient.start(PEER) << std::endl;
+    while(MyClient.alive());
     return 0;
 }

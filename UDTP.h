@@ -50,6 +50,7 @@ enum SocketReturn
     INVALID_SETUP,
     ALREADY_RUNNING,
     SOCKET_NOT_INIT,
+    COULD_NOT_START_MUTEX,
     COULD_NOT_BIND_TCP,
     COULD_NOT_BIND_UDP,
     COULD_NOT_LISTEN_TCP,
@@ -70,29 +71,36 @@ class UDTP
 public:
     UDTP(UDTPSetup settings)
     {
-        _initComplete = 0x00;
-        _settings = settings;
+        _myUDTP = settings;
         _isAlive = false;
     }   /*Default constructor for both client and server*/
 
-    SocketReturn start(SocketType socketType);
-    bool start_flow_sockets(unsigned short withCount);
-    bool send_listen_data(UDTPData& data);
-    void send_flow_data(UDTPFlowThreadData* threadFlowData, UDTPData& data); //*Different types of sockets, Listen goes to TCP and Flow goes to UDP*/
+    SocketReturn start(SocketType socketType); /*Starts Listen TCP socket*/
+    bool start_mutex(); /*Starts mutexes*/
+    bool start_listen_thread(); /*Starts listen thread*/
+    bool start_flow_sockets(unsigned int peerID); /*Starts flow sockets for a certain peer ID*/
 
-    SocketType get_socket_type() {
-        return _socketType;
-    }
-        bool alive(){
-        return _isAlive;
-    };
+    void send_flow_data(UDTPFlowThreadData* threadFlowData, UDTPData& data); //*Different types of sockets, Listen goes to TCP and Flow goes to UDP*/
+    bool send_flow_links(unsigned int peerID);
+    bool start_flow_threads(unsigned int peerID);
+    bool send_required_packets();
+
+    unsigned int add_peer(unsigned int listenSocketOfPeer); /*Adds peer and returns posID*/
+    unsigned int find_peer_pos(unsigned int listenSocketOfPeer); /*Returns the positional ID of the peer*/
+    bool remove_peer(unsigned int posID); /*Removes peer*/
+    UDTPPeer* get_peer(unsigned int posID); /*Gets a peer from a specific position ID*/
+    UDTPPeer* self_peer() { return _listPeers[0];}; /*Gets self peer which is stored at zero.*/
+
+
+    bool send_listen_data(UDTPData& data); /*Starts listen*/
+
+    SocketType get_socket_type();
+    bool alive();
 
     TransferReturn send_file(UDTPPath addressPath);
     TransferReturn get_file(UDTPPath addressPath);
 
-    bool start_listen_thread();
-    bool start_flow_threads();
-    bool send_required_packets();
+
     bool process_handshake(UDTPHandshake& handshake);
     bool process_header(UDTPHeader& readHeader);
     bool process_path(UDTPPath& readPath);
@@ -102,18 +110,21 @@ public:
     static void* flowThreadsFunc(void*);
     static void* openFlowThread(void*);
 
+    void display_msg(std::string message); /*Displays message on console*/
     bool stop(); /*Stop server/client. This will eject anything and everything no matter what.*/
 private:
-    unsigned char _initComplete;
 
-    UDTPSetup _settings;
+
+    UDTPSetup _myUDTP;
     SocketType _socketType;
     bool _isAlive; /*Is it running?*/
 
+    /*Mutexes*/
+    pthread_mutex_t _mutexFlowThread;
+    pthread_mutex_t _mutexPeer;
 
 
     pthread_t _listenThread; /*There will be only one primary listen thread*/
-    std::vector<UDTPFlowThreadData*> _flowThreads; /*Flow thread holders*/
     /*For server use only!*/
     std::vector<UDTPPeer*> _listPeers; /*Peers that are connected, including themselves*/
 

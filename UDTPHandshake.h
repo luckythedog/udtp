@@ -1,6 +1,7 @@
 #ifndef __UDTP_HANDSHAKE
 #define __UDTP_HANDSHAKE
 #include <stdint.h>
+#include <vector>
 #include "UDTPPacket.h"
 
 class UDTPData;
@@ -8,10 +9,11 @@ enum HandshakeType{
     /*Sent through TCP*/
     HandshakeVersion = 0x51,
     HandshakeChunkSize = 0x52,
-    HandshakeSocketsCount = 0x53,
-    HandshakeReady = 0x54, /*Sent once everything is up and ready!*/
-    /*Sent through UDP*/
-    HandshakeSendAddress = 0x61 /*Sends server or client one single flow socket address. No data, just taken from UDP sockaddr_in, Should follow ResponseNone and ResponseApproved*/
+    HandshakeFlowSocket = 0x53,
+    HandshakeFlowLinkRequest = 0x54,
+    HandshakeFlowLink = 0x55,
+    HandshakeFlowThreads = 0x56,
+    HandshakeComplete  = 0x57 /*Sent once everything is up and ready!*/
 
 };
 class UDTPHandshake : public UDTPPacket{
@@ -34,14 +36,22 @@ class UDTPHandshake : public UDTPPacket{
         bool set_version(unsigned short version){ _version = version;};
         unsigned short get_version() { return _version;};
 
+        bool set_destination_port(unsigned short destinationPort) { _destinationPort = destinationPort;};
+        unsigned short get_destination_port() { return _destinationPort;};
 
-        bool set_return_sockets_count(unsigned int amount){ _returnedSocketsCount = amount;};
-       unsigned short get_return_sockets_count() { return _returnedSocketsCount;};
+
+        bool set_flow_sockets_count(unsigned int amount){ _flowSocketsCount = amount;};
+       unsigned short get_flow_sockets_count() { return _flowSocketsCount;};
     private:
+        /*Deals with HandshakeChunkSize*/
         unsigned short  _chunkSizeAgreement;
+        /*Deals with HandshakeVersion*/
         unsigned short _version;
-
-        unsigned short _returnedSocketsCount; /*How many sockets are they wanting to use? You cannot go past the server's choices*/
+        /*Deals with HandshakeFlowSockets*/
+        unsigned short _flowSocketsCount; /*How many sockets are they wanting to use? You cannot go past the server's choices*/
+        /*Deals with HandshakeFlowLink*/
+        unsigned short _destinationPort;
+        /*Deals with all*/
         HandshakeType _handshakeType;
         ResponseCode _responseCode;
 };
