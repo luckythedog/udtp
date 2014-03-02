@@ -20,6 +20,28 @@ bool UDTPPeer::add_flow_thread(pthread_t thread, unsigned int flowSocket, sockad
         }
             return NULL;
         };
+        UDTPFlowThreadData* UDTPPeer::find_thread_with_port(unsigned short port){
+            for(unsigned int i=0; i<_flowThreads.size(); i++){
+                if(port = ntohs(_flowThreads[i]->get_socket_address().sin_port)){
+                    return _flowThreads[i];
+                }
+            }
+            return NULL;
+
+        }
+        bool UDTPPeer::check_all_flow_threads_approved(){
+            for(unsigned int i=0; i<_flowThreads.size(); i++){
+                if(!_flowThreads[i]->check_approved()) return false;
+            }
+            return true;
+        }
+
+                bool UDTPPeer::check_all_flow_threads_alive(){
+            for(unsigned int i=0; i<_flowThreads.size(); i++){
+                if(!_flowThreads[i]->alive()) return false;
+            }
+            return true;
+        }
 bool UDTPPeer::remove_all_flow_threads(){
     for(unsigned int i=0; i<_flowThreads.size(); i++){
 

@@ -84,14 +84,23 @@ bool UDTP::start_flow_sockets(unsigned int peerID) /*Could be self peer id too!*
         get_peer(peerID)->add_flow_thread(flowThread, flowSocket, flowAddress); /*Adds to peer list!*/
     }
     get_peer(peerID)->set_init_process_complete(FLOW_SOCKETS); /*Set to complete*/
+
+    UDTPHandshake handshakeFlowLinkRequest(HandshakeFlowLinkRequest); /*Send out a flow link request when done*/
+    UDTPData handshakeFlowLinkRequestData(handshakeFlowLinkRequest);
+    handshakeFlowLinkRequestData.set_socket_id(get_peer(peerID)->get_listen_socket());
+    send_listen_data(handshakeFlowLinkRequestData);
+
     return true;
 }
-bool UDTP::send_flow_links(unsigned int peerID){
-    for(unsigned int i=0; i<_myUDTP.get_number_of_flow_sockets();i++){
-            UDTPHandshake handshakeFlowLink(HandshakeFlowLink);
-            handshakeFlowLink.set_destination_port(ntohs(get_peer(peerID)->get_thread(i)->get_socket_address().sin_port)); /*Server holds their own version of peers. This will be their port number or client's port*/
-            UDTPData handshakeFlowLinkData(handshakeFlowLink);
-            send_listen_data(handshakeFlowLinkData);
+bool UDTP::send_flow_links(unsigned int peerID)
+{
+    for(unsigned int i=0; i<_myUDTP.get_number_of_flow_sockets(); i++)
+    {
+        UDTPHandshake handshakeFlowLink(HandshakeFlowLink);
+        handshakeFlowLink.set_destination_port(ntohs(get_peer(peerID)->get_thread(i)->get_socket_address().sin_port)); /*Server holds their own version of peers. This will be their port number or client's port*/
+        UDTPData handshakeFlowLinkData(handshakeFlowLink);
+        handshakeFlowLinkData.set_socket_id(get_peer(peerID)->get_listen_socket());
+        send_listen_data(handshakeFlowLinkData);
     }
     return true;
 }
@@ -102,11 +111,24 @@ bool UDTP::stop()
 }
 bool UDTP::start_flow_threads(unsigned int peerID)
 {
+    for(unsigned int threadIndex=0; threadIndex<_myUDTP.get_number_of_flow_sockets(); threadIndex++)
+    {
+        pthread_create((pthread_t*)get_peer(peerID)->get_thread(threadIndex)->get_pthread(), NULL, UDTP::flowThreadsFunc, (UDTPFlowThreadData*)get_peer(peerID)->get_thread(threadIndex));
+        pthread_tryjoin_np(get_peer(peerID)->get_thread(threadIndex)->get_pthread(), NULL);
+        get_peer(peerID)->get_thread(threadIndex)->set_alive();
+    }
+
+    get_peer(peerID)->set_init_process_complete(FLOW_THREADS);
+
+    UDTPHandshake handshakeFlowThreads(HandshakeFlowThreads);
+    UDTPData handshakeFlowThreadsData(handshakeFlowThreads);
+    handshakeFlowThreadsData.set_socket_id(get_peer(peerID)->get_listen_socket());
+    send_listen_data(handshakeFlowThreadsData);
+
     return true;
 }
 bool UDTP::send_listen_data(UDTPData& data)
 {
-    if(data.get_socket_id() < 0) return false;
     send(data.get_socket_id(), data.get_raw_buffer(), data.get_packet_size(), 0);
     return true;
 }
@@ -160,6 +182,7 @@ bool UDTP::remove_peer(unsigned int posID)
 bool UDTP::process_header(UDTPHeader& readHeader)
 {
     unsigned int posID = readHeader.get_peer_id(); /*Takes the peer ID from here*/
+    if(get_socket_type() == PEER) posID  = 0;
     UDTPFile newFile(readHeader.get_path_of_file()); /*Look for the path sent*/
     switch (readHeader.get_header_type())
     {
@@ -224,40 +247,7 @@ bool UDTP::process_header(UDTPHeader& readHeader)
 bool UDTP::process_path(UDTPPath& readPath)
 {
     unsigned int posID = readPath.get_peer_id(); /*Takes the peer ID from here*/
-    switch(readPath.get_response_code())
-    {
-    case ResponseNotReady:
-        break;
-    case ResponseListingFound:
-        break;
-    case ResponseFileExistsAlready:
-        break;
-    case ResponseFileNotFound:
-        break;
-    case ResponseNone: /*You're getting a request!*/
-        if(readPath.get_filename() == EMPTY )
-        {
-            if(readPath.get_directory() == EMPTY)  /*Invalid path*/
-            {
-                readPath.set_response_code(ResponseInvalidPath);
-            }
-            if(readPath.get_directory() != EMPTY)  /*Directory request*/
-            {
-                readPath.set_response_code(ResponseListingFound);
-                /*Do some directory listing in this shit and put it in readPath's returnPath member variable*/
-            }
-        }
-        if(readPath.get_filename() != EMPTY)  /*Means it is an individual file!*/
-        {
-            /*Open a filestream using _myUDTP.get_root_directory() + readPath.get_directory() + readPath.get_filename();
-            Then respond with a ResponseFileNotFound, ResponseFileAlreadyExists or something*/
-        }
-        break;
-
-    }
-
-
-
+    if(get_socket_type() == PEER) posID  = 0;
     UDTPData outgoingData(readPath);
     send_listen_data(outgoingData);
     return true;
@@ -270,39 +260,7 @@ bool UDTP::process_chunk(UDTPChunk& readChunk)
 bool UDTP::process_acknowledge(UDTPAcknowledge& readAcknowledge)
 {
     unsigned int posID = readAcknowledge.get_peer_id(); /*Takes the peer ID from here*/
-    switch(readAcknowledge.get_acknowledge_type())
-    {
-    case AcknowledgeMissing:
-        if(readAcknowledge.get_response_code() == ResponseNotReady)
-        {
-            send_required_packets(); /*Try to ready up again!*/
-        }
-        if(readAcknowledge.get_response_code() == ResponseApproved)
-        {
-        }
-        if(readAcknowledge.get_response_code() == ResponseRejected)
-        {
-        }
-        if(readAcknowledge.get_response_code() == ResponseNone)
-        {
-        }
-        break;
-    case AcknowledgeComplete:
-        if(readAcknowledge.get_response_code() == ResponseNotReady)
-        {
-            send_required_packets();  /*Try to ready up again!*/
-        }
-        if(readAcknowledge.get_response_code() == ResponseApproved)
-        {
-        }
-        if(readAcknowledge.get_response_code() == ResponseRejected)
-        {
-        }
-        if(readAcknowledge.get_response_code() == ResponseNone)
-        {
-        }
-        break;
-    }
+    if(get_socket_type() == PEER) posID  = 0;
     /*Still working on the filing!*/
 
     UDTPData outgoingData(readAcknowledge);
@@ -312,6 +270,7 @@ bool UDTP::process_acknowledge(UDTPAcknowledge& readAcknowledge)
 bool UDTP::process_handshake(UDTPHandshake& readHandshake)
 {
     unsigned int posID = readHandshake.get_peer_id(); /*Takes the peer ID from here*/
+    if(get_socket_type() == PEER) posID  = 0;
     switch(readHandshake.get_handshake_type())
     {
     case HandshakeVersion:
@@ -320,15 +279,17 @@ bool UDTP::process_handshake(UDTPHandshake& readHandshake)
             self_peer()->set_init_process_complete(VERSION_AGREE);
             return true;
         }
-        if(readHandshake.get_response_code() == ResponseRejected)
+        if(readHandshake.get_response_code() == ResponseCriticalError)
         {
+            display_msg("Your version number was not approved!");
+            stop(); /*Disconnect entirely!*/
             return true;
         }
         if(readHandshake.get_response_code() == ResponseNone)  //*Client has pushed a request*/
         {
             if(readHandshake.get_version() != _myUDTP.get_version())
             {
-                readHandshake.set_response_code(ResponseRejected);
+                readHandshake.set_response_code(ResponseCriticalError);
             }
             else
             {
@@ -344,8 +305,10 @@ bool UDTP::process_handshake(UDTPHandshake& readHandshake)
             self_peer()->set_init_process_complete(CHUNKSIZE_AGREE);
             return true;
         }
-        if(readHandshake.get_response_code() == ResponseRejected)
+        if(readHandshake.get_response_code() == ResponseCriticalError)
         {
+            display_msg("Your chunk size agreement was not approved!");
+            stop(); /*Disconnect entirely!*/
             return true;
         }
         if(readHandshake.get_response_code() == ResponseNone)  /*Client has pushed a request*/
@@ -357,7 +320,7 @@ bool UDTP::process_handshake(UDTPHandshake& readHandshake)
             }
             else
             {
-                readHandshake.set_response_code(ResponseRejected);
+                readHandshake.set_response_code(ResponseCriticalError);
             }
         }
 
@@ -368,9 +331,6 @@ bool UDTP::process_handshake(UDTPHandshake& readHandshake)
             start_flow_sockets(posID);
             return true;
         }
-        if(readHandshake.get_response_code() == ResponseRejected)
-        {
-        }
         if(readHandshake.get_response_code() == ResponseNone)
         {
             start_flow_sockets(posID);
@@ -378,40 +338,123 @@ bool UDTP::process_handshake(UDTPHandshake& readHandshake)
         }
 
         break;
-        case HandshakeFlowLinkRequest:
-            if(readHandshake.get_response_code() == ResponseApproved || readHandshake.get_response_code == ResponseRetry){
-               send_flow_links(posID);
+    case HandshakeFlowLinkRequest:
+        if(readHandshake.get_response_code() == ResponseRetry)
+        {
+            readHandshake.set_response_code(ResponseNone); /*Send once again!*/
+        }
+        if(readHandshake.get_response_code() == ResponseApproved)
+        {
+            send_flow_links(posID);
+        }
+        if(readHandshake.get_response_code() == ResponseNone)
+        {
+            if(get_peer(posID)->check_init_process(FLOW_SOCKETS))  /*Check if ready then go for it!*/
+            {
+                readHandshake.set_response_code(ResponseApproved);
             }
-            if(readHandshake.get_response_code() == ResponseNone){
-
-                if(!get_peer(posID)->check_init_process(FLOW_SOCKETS)) {
-                    readHandshake.set_response_code(ResponseRetry);
-                }else{
-                    readHandshake.set_response_code(ResponseApproved);
-                    send_flow_links(posID);
-                }
-
-
+            else
+            {
+                readHandshake.set_response_code(ResponseRetry);
             }
+        }
         break;
-        case HandshakeFlowLink:
-            if(readHandshake.get_response_code() == ResponseNone){
-                struct sockaddr_in destinationAddress;
-                destinationAddress.sin_port = ntohs(readHandshake.get_destination_port());
-                destinationAddress.sin_family = AF_INET;
-                destinationAddress.sin_addr.s_addr = get_peer(posID)->get_listen_address().sin_addr.s_addr;
+    case HandshakeFlowLink:
+        if(readHandshake.get_response_code() == ResponseApproved)
+        {
+            get_peer(posID)->find_thread_with_port(readHandshake.get_destination_port())->set_approved();
 
-                get_peer(posID)->get_next_thread_link_needed()->set_destination_address(destinationAddress);
-                get_peer(posID)->get_next_thread_link_needed()->set_linked(); /*Sets destination and sets it as linked*/
+            if(get_peer(posID)->check_all_flow_threads_approved())  /*Exit strategy!*/
+            {
+                get_peer(posID)->set_init_process_complete(FLOW_ADDRESSES);
+                start_flow_threads(posID);
             }
+            return true;
+        }
+        if(readHandshake.get_response_code() == ResponseNone)
+        {
+            struct sockaddr_in destinationAddress;
+            destinationAddress.sin_port = ntohs(readHandshake.get_destination_port()); /*Only needs the port from FLOW socket!*/
+            destinationAddress.sin_family = AF_INET;
+            destinationAddress.sin_addr.s_addr = get_peer(posID)->get_listen_address().sin_addr.s_addr; /*Takes IP Address from LISTEN socket.*/
+
+            get_peer(posID)->get_next_thread_link_needed()->set_destination_address(destinationAddress);
+            get_peer(posID)->get_next_thread_link_needed()->set_linked(); /*Sets destination and sets it as linked*/
+            readHandshake.set_response_code(ResponseApproved);
+        }
         break;
     case HandshakeFlowThreads:
+        if(readHandshake.get_response_code() == ResponseApproved)
+        {
+            get_peer(posID)->set_init_process_complete(FLOW_THREADS);
+            send_peer_init_completed(posID);
+            return true;
+        }
+        if(readHandshake.get_response_code() == ResponseRetry)
+        {
+            readHandshake.set_response_code(ResponseNone); /*Resend again!*/
+        }
+        if(readHandshake.get_response_code() == ResponseNone)
+        {
+            if(get_peer(posID)->check_all_flow_threads_alive())  /*Both checks out to be working just good!*/
+            {
+                readHandshake.set_response_code(ResponseApproved);
+            }
+            else
+            {
+                readHandshake.set_response_code(ResponseRetry);
+            }
+        }
+        break;
+    case HandshakeComplete:
+        if(readHandshake.get_response_code() == ResponseApproved)
+        {
+            get_peer(posID)->set_init_process_complete(COMPLETE);
+            return true;
+        }
+        if(readHandshake.get_response_code() == ResponseCriticalError)
+        {
+        }
+        if(readHandshake.get_response_code() == ResponseRetry)
+        {
+            readHandshake.set_response_code(ResponseNone);
+        }
+        if(readHandshake.get_response_code() == ResponseNone)
+        {
+            if(!get_peer(posID)->check_init_process(LISTEN_SOCKET)) readHandshake.set_response_code(ResponseCriticalError);
+            if(!get_peer(posID)->check_init_process(LISTEN_THREAD)) readHandshake.set_response_code(ResponseCriticalError);
+            if(!get_peer(posID)->check_init_process(VERSION_AGREE)) readHandshake.set_response_code(ResponseCriticalError);
+            if(!get_peer(posID)->check_init_process(CHUNKSIZE_AGREE)) readHandshake.set_response_code(ResponseCriticalError);
+            if(!get_peer(posID)->check_init_process(FLOW_SOCKETS)) readHandshake.set_response_code(ResponseCriticalError);
+            if(!get_peer(posID)->check_init_process(FLOW_ADDRESSES)) readHandshake.set_response_code(ResponseCriticalError);
+            if(readHandshake.get_response_code() == ResponseCriticalError) get_peer(posID)->set_offline(); /*Set to offline!*/
 
+            if(get_peer(posID)->check_init_process(FLOW_THREADS))   /*Last stop! Either approve or retry.*/
+            {
+                get_peer(posID)->set_init_process_complete(COMPLETE);
+                readHandshake.set_response_code(ResponseApproved);
+            }
+            else
+            {
+                readHandshake.set_response_code(ResponseRetry);
+            }
+
+        }
         break;
     }
 
     UDTPData outgoingData(readHandshake);
     send_listen_data(outgoingData);
+    return true;
+}
+bool UDTP::send_peer_init_completed(unsigned int peerID)
+{
+    UDTPHandshake handshakeComplete(HandshakeComplete);
+    UDTPData dataComplete(handshakeComplete);
+    dataComplete.set_peer_id(peerID);
+    /*THIS MIGHT HAVE CAUSED THE SEG FAULT*/
+    dataComplete.set_socket_id(get_peer(peerID)->get_listen_socket());
+    send_listen_data(dataComplete);
     return true;
 }
 bool UDTP::send_required_packets()
@@ -624,6 +667,11 @@ void* UDTP::flowThreadsFunc(void* args)
 {
 //0x01<<6 here
     UDTPFlowThreadData *myFlowData = (UDTPFlowThreadData*) args;
+    while(myFlowData->alive()){ /*Thread is good and running!*/
+        char packetDeduction[3];
+            recv(myFlowData->get_flow_socket(), packetDeduction, 3, MSG_WAITALL);
+    }
+
     myFlowData  = NULL;
 }
 

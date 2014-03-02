@@ -23,9 +23,7 @@ enum ResponseCode{
     ResponseInvalidPath = 0xF6,
 
     ResponseRetry = 0xF7, /*Just in case server is not ready to provide something, he will ask client to retry the packet again at a different time*/
-    ResponseNotReady = 0xF8, /*Client has not completed steps in getting ready or there was an error. Either way Path, Header, Chunks, or Acknowledge requests will not be handled. Only handshake.*/
-
-    ResponseNoneAndFlowLeader = 0xF9 /*It's like ResponseNone but you proclaim yourself as the Flow leader in threading in it*/
+    ResponseCriticalError = 0xF8 /*This will make the client FORCE quit the client with a error message.*/
 };
 
 class UDTPPacket{
@@ -44,8 +42,10 @@ class UDTPPacket{
         bool set_peer_id(unsigned int peerID) { _peerID = peerID;};
 
     protected:
+        /*Local variables! They will NOT transmit through the network!*/
         unsigned int _peerID; /*It's numerical location in the peer's list*/
        unsigned int _socketID; /*Optional holder*/ /*Since indexes and sockets are different entirely on each system! These are local!*/
+       /*These can be transmitted*/
         PacketType _packetType;
         ResponseCode _responseCode; /*Not every packet uses a response code, like Chunk or Whine -- since those do not need a response.*/
 };

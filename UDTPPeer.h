@@ -47,7 +47,10 @@ class UDTPPeer{ /*The way we can identify different UDP ports is that, we can id
     bool add_flow_thread(pthread_t thread, unsigned int flowSocket, sockaddr_in socketAddress);
     UDTPFlowThreadData* get_next_thread_link_needed();
     UDTPFlowThreadData* get_thread(unsigned int posID){ return _flowThreads[posID];};
-    bool remove_all_flow_threads();
+    UDTPFlowThreadData* find_thread_with_port(unsigned short port);
+    bool check_all_flow_threads_approved();
+     bool check_all_flow_threads_alive();
+        bool remove_all_flow_threads();
     bool set_online(){ _connectionStatus = true;};
     bool set_offline(){ _connectionStatus = false;};
     bool get_connection_status(){ return _connectionStatus;};

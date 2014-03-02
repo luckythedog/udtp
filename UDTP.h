@@ -90,6 +90,7 @@ public:
     bool remove_peer(unsigned int posID); /*Removes peer*/
     UDTPPeer* get_peer(unsigned int posID); /*Gets a peer from a specific position ID*/
     UDTPPeer* self_peer() { return _listPeers[0];}; /*Gets self peer which is stored at zero.*/
+    bool send_peer_init_completed(unsigned int peerID);
 
 
     bool send_listen_data(UDTPData& data); /*Starts listen*/

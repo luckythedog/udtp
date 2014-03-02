@@ -21,7 +21,7 @@ class UDTPFlowThreadData{
         bool check_approved(){ return _approved;};
         bool set_alive() { _alive = true; return true;};
         bool alive() { return _alive;};
-        pthread_t get_thread();
+        pthread_t get_pthread() { return _thread;};
 
         bool set_socket_address(sockaddr_in newAddress) { _socketAddress = newAddress;};
         sockaddr_in get_socket_address() { return _socketAddress;};
