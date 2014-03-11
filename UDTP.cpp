@@ -30,18 +30,20 @@ SocketReturn UDTP::start(SocketType socketType)
     listenAddress.sin_port = htons(_myUDTP.get_port());
     listenAddress.sin_family = AF_INET;
 
+
+
     /*Important part*/
     switch (_socketType)
     {
     case HOST:
         listenAddress.sin_addr.s_addr = INADDR_ANY;
-        if(bind(_listenSocket, (struct sockaddr*)&listenAddress, (socklen_t)sizeof(listenAddress)) < 0) return COULD_NOT_BIND_TCP;
+        if(bind(_listenSocket, (struct sockaddr*)&listenAddress, sizeof(struct sockaddr_in)) < 0) return COULD_NOT_BIND_TCP;
         if(listen(_listenSocket,0) < 0) return COULD_NOT_LISTEN_TCP;
         display_msg("HOST socket began listening");
         break;
     case PEER:
         listenAddress.sin_addr.s_addr = inet_addr(_myUDTP.get_ip());
-        if(connect(_listenSocket, (struct sockaddr*)&listenAddress, (socklen_t)sizeof(listenAddress)) < 0) return COULD_NOT_CONNECT_TCP;
+        if(connect(_listenSocket, (struct sockaddr*)&listenAddress, sizeof(struct sockaddr_in)) < 0) return COULD_NOT_CONNECT_TCP;
         display_msg("PEER socket has connected to server");
         break;
     }
@@ -506,12 +508,13 @@ void* UDTP::listenThreadFunc(void* args)
         {
             activeListenSocketsPtr = &activeListenSockets[0];
             activeListenActivity = poll(activeListenSocketsPtr, activeListenSockets.size(), -1);
-            if(activeListenActivity < 0 ) perror("poll");
+            if(activeListenActivity < 0 ) perror("poll_host");
             if((activeListenSockets[0].revents & POLLIN))
             {
                 struct sockaddr_in newPeerAddress;
+                int newPeerAddressLen = sizeof(newPeerAddress);
                 unsigned int newPeerListenSocket;
-                if((newPeerListenSocket = accept(activeListenSockets[0].fd, (struct sockaddr*)&newPeerAddress, (socklen_t*)sizeof(newPeerAddress))) <0)
+                if((newPeerListenSocket = accept(activeListenSockets[0].fd, (struct sockaddr*)&newPeerAddress, (socklen_t*)&newPeerAddressLen)) <0)
                 {
                     perror("accept");
                 }
@@ -586,9 +589,9 @@ void* UDTP::listenThreadFunc(void* args)
         if(accessUDTP->_socketType == PEER)
         {
             if(!sentRequiredPackets) sentRequiredPackets = accessUDTP->send_required_packets();
-
+            activeListenSocketsPtr = &activeListenSockets[0]; /*This line fixes poll: Bad Address*/
             activeListenActivity = poll(activeListenSocketsPtr, activeListenSockets.size(), -1);
-            if(activeListenActivity < 0 ) perror("poll");
+            if(activeListenActivity < 0 ) perror("poll_peer");
 
             if((activeListenSockets[0].revents & POLLIN))
             {
