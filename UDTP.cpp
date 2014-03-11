@@ -59,12 +59,14 @@ SocketReturn UDTP::start(SocketType socketType)
 }
 bool UDTP::start_mutex()
 {
+    display_msg("Mutex have been started");
     if (pthread_mutex_init(&_mutexFlowThread, NULL) != 0) return false;
     if (pthread_mutex_init(&_mutexPeer, NULL) != 0) return false;
     return true;
 }
 bool UDTP::start_flow_sockets(unsigned int peerID) /*Could be self peer id too!*/
 {
+    display_msg("Flow sockets have been started");
     if(get_socket_type() == PEER) peerID = 0; //Just making sure!*/
     for(unsigned int flowCount = 0; flowCount<_myUDTP.get_number_of_flow_sockets(); flowCount++)
     {
@@ -96,6 +98,7 @@ bool UDTP::start_flow_sockets(unsigned int peerID) /*Could be self peer id too!*
 }
 bool UDTP::send_flow_links(unsigned int peerID)
 {
+    display_msg("Flow links have been sent out");
     for(unsigned int i=0; i<_myUDTP.get_number_of_flow_sockets(); i++)
     {
         UDTPHandshake handshakeFlowLink(HandshakeFlowLink);
@@ -113,6 +116,7 @@ bool UDTP::stop()
 }
 bool UDTP::start_flow_threads(unsigned int peerID)
 {
+    display_msg("Flow threads have been started");
     for(unsigned int threadIndex=0; threadIndex<_myUDTP.get_number_of_flow_sockets(); threadIndex++)
     {
         pthread_create((pthread_t*)get_peer(peerID)->get_thread(threadIndex)->get_pthread(), NULL, UDTP::flowThreadsFunc, (UDTPFlowThreadData*)get_peer(peerID)->get_thread(threadIndex));
@@ -131,7 +135,11 @@ bool UDTP::start_flow_threads(unsigned int peerID)
 }
 bool UDTP::send_listen_data(UDTPData& data)
 {
-    send(data.get_socket_id(), data.get_raw_buffer(), data.get_packet_size(), 0);
+    if(get_socket_type() == PEER) display_msg("PEER has sent out data using send_listen_data()");
+    if(get_socket_type() == HOST) display_msg("HOST has sent out data using send_listen_data()");
+    send(data.get_socket_id(), data.get_raw_buffer(), data.get_packet_size(), 0); /*The UDTPData's socket id is used to denote where to send the packet. The socket id is handled in the polling threads. For HOSTS, the socket id
+                                                                                                                    will be the receiving socket's file descriptor. For PEER, it will always be its own _listenSocket being that that is where the central receiving and sending
+                                                                                                                    happens.*/
     return true;
 }
 unsigned int UDTP::add_peer(unsigned int listenSocketOfPeer)
@@ -275,6 +283,14 @@ bool UDTP::process_handshake(UDTPHandshake& readHandshake)
     if(get_socket_type() == PEER) posID  = 0;
     switch(readHandshake.get_handshake_type())
     {
+    case HandshakeStart:
+        if(readHandshake.get_response_code() == ResponseApproved){ /*HOST has received this from PEER after they have sent out send_required_packets()*/
+        }
+        if(readHandshake.get_response_code() == ResponseNone){ /*PEER has received this from HOST*/
+            send_required_packets(); /*Send out MANDATORY PACKETS! Version agreement, Chunksize agreement and UDP sockets count agreement (to start UDP threads)*/
+            readHandshake.set_response_code(ResponseApproved); /*Has sent out packets and approved, will now send this back!*/
+        }
+    break;
     case HandshakeVersion:
         if(readHandshake.get_response_code() == ResponseApproved)   /*Client has it approved*/
         {
@@ -461,9 +477,11 @@ bool UDTP::send_peer_init_completed(unsigned int peerID)
 }
 bool UDTP::send_required_packets()
 {
+    display_msg("PEER is sending out required packets");
     if(get_socket_type() == HOST) return false; /*Hosts don't need to send this. Peers need to request it!*/
     if(!self_peer()->check_init_process(VERSION_AGREE))
     {
+        display_msg("PEER is sending out handshake: version agree");
         UDTPHandshake versionToApprove(HandshakeVersion); /*Send handshake of version first!*/
         versionToApprove.set_version(_myUDTP.get_version());
 
@@ -472,6 +490,7 @@ bool UDTP::send_required_packets()
     }
     if(!self_peer()->check_init_process(CHUNKSIZE_AGREE))
     {
+       display_msg("PEER is sending out handshake: chunk size agree");
         UDTPHandshake chunkSizeToApprove(HandshakeChunkSize); /*Send chunksize agreements*/
         chunkSizeToApprove.set_chunk_size_agreement(_myUDTP.get_chunk_size_agreement());
 
@@ -480,6 +499,7 @@ bool UDTP::send_required_packets()
     }
     if(!self_peer()->check_init_process(FLOW_SOCKETS))  /*Gets address and port of the flow sockets*/
     {
+        display_msg("PEER is sending out handshake: flow sockets count");
         UDTPHandshake socketsCountRequest(HandshakeFlowSocket); /*Send a request to find out flow socket count on server-end*/
         UDTPData dataOfRequestSocketsCount(socketsCountRequest);
         send_listen_data(dataOfRequestSocketsCount);
@@ -501,6 +521,8 @@ void* UDTP::listenThreadFunc(void* args)
     int activeListenActivity;
 
     std::queue<unsigned int> removePeerAndSocketSafely;
+    if(accessUDTP->get_socket_type() == PEER) accessUDTP->display_msg("PEER's polling has been configured and is starting");
+    if(accessUDTP->get_socket_type() == HOST) accessUDTP->display_msg("HOST's polling has been configured and is starting");
     while(accessUDTP->alive())
     {
         /*********Beginning of Server Code**********/
@@ -520,6 +542,7 @@ void* UDTP::listenThreadFunc(void* args)
                 }
                 else
                 {
+                    accessUDTP->display_msg("HOST has detected a new peer and is accepting the connection");
                     pollfd newPollFd; //*Add to polling*/
                     newPollFd.fd = newPeerListenSocket;
                     newPollFd.events = POLLIN;
@@ -527,6 +550,14 @@ void* UDTP::listenThreadFunc(void* args)
                     /*Add to peers list. Both Pollfd and _listPeer are Parallel..*/
                     unsigned int newPeerID = accessUDTP->add_peer(newPeerListenSocket);
                     accessUDTP->get_peer(newPeerID)->set_listen_address(newPeerAddress);
+
+                    UDTPHandshake handshakeStart(HandshakeStart); /*Send this handshake request to client so he will start activate the function: send_required_packets();*/
+                    UDTPData dataHandshakeStart (handshakeStart);
+                    dataHandshakeStart.set_socket_id(newPeerListenSocket); /*Take socket id! so the send_listen_data function will know where to send it to!*/
+                    accessUDTP->display_msg("HOST has sent out a HandshakeStart to notify new peer to use function: send_required_packets()");
+                    accessUDTP->send_listen_data(dataHandshakeStart); /*Send out Handshake start so the client knows to start the function send_required_packets()*/
+
+
                 }
             }
             for(unsigned int i=1; i<activeListenSockets.size(); i++)
@@ -536,33 +567,39 @@ void* UDTP::listenThreadFunc(void* args)
                     char packetDeduction[3]; /*Takes Packet Size (unsigned int16 bits) at position 0 and 1 and Packet Type at position 2*/
                     if((recv(accessUDTP->_listenSocket, packetDeduction, 3, 0)) != 0)
                     {
+                        accessUDTP->display_msg("HOST has received incoming packet");
                         UDTPData incomingData(packetDeduction); //*Use UDTPData class to get packet type more easily, and also get unsigned short of file size to read.
                         recv(accessUDTP->_listenSocket, (char*)incomingData.write_to_buffer(), incomingData.get_packet_size(), 0);
                         incomingData.set_socket_id(activeListenSockets[i].fd); /*Applies socket to UDTPData*/
                         incomingData.set_peer_id(i); /*Sets index as the peer's ID location*/
                         PacketType incomingPacketType = incomingData.get_packet_type();
-
+                        accessUDTP->display_msg("HOST is processing packet deducation");
                         /*USE packet type and build correctly. here*/
                         if(incomingPacketType == Header)
                         {
+                            accessUDTP->display_msg("HOST has deduced the packet as a Header and is now processing");
                             UDTPHeader readHeader(incomingData);
                             accessUDTP->process_header(readHeader);
                         }
                         if(incomingPacketType == Path)
                         {
+                            accessUDTP->display_msg("HOST has deduced the packet as a Path and is now processing");
                             UDTPPath readPath(incomingData);
                             accessUDTP->process_path(readPath);
                         }
                         if(incomingPacketType == Acknowledge)
                         {
+                            accessUDTP->display_msg("HOST has deduced the packet as an Acknowledge and is now processing");
                             UDTPAcknowledge readAcknowledge(incomingData);
                             accessUDTP->process_acknowledge(readAcknowledge);
                         }
                         if(incomingPacketType == Handshake)
                         {
+                            accessUDTP->display_msg("HOST has deduced the packet as a Handshake and is now processing");
                             UDTPHandshake readHandshake(incomingData);
                             accessUDTP->process_handshake(readHandshake);
                         }
+                        accessUDTP->display_msg("HOST has completed packet processing");
                     }
                     else
                     {
@@ -588,7 +625,6 @@ void* UDTP::listenThreadFunc(void* args)
         /*********Beginning of Client Code**********/
         if(accessUDTP->_socketType == PEER)
         {
-            if(!sentRequiredPackets) sentRequiredPackets = accessUDTP->send_required_packets();
             activeListenSocketsPtr = &activeListenSockets[0]; /*This line fixes poll: Bad Address*/
             activeListenActivity = poll(activeListenSocketsPtr, activeListenSockets.size(), -1);
             if(activeListenActivity < 0 ) perror("poll_peer");
@@ -598,33 +634,39 @@ void* UDTP::listenThreadFunc(void* args)
                 char packetDeduction[3]; /*Takes Packet Size (unsigned int16 bits) at position 0 and 1 and Packet Type at position 2*/
                 if((recv(accessUDTP->_listenSocket, packetDeduction, 3, 0)) != 0)
                 {
+                    accessUDTP->display_msg("PEER has received incoming packet");
                     UDTPData incomingData(packetDeduction); //*Use UDTPData class to get packet type more easily, and also get unsigned short of file size to read.
                     recv(accessUDTP->_listenSocket, (char*)incomingData.write_to_buffer(), incomingData.get_packet_size(), 0);
                     incomingData.set_socket_id(accessUDTP->self_peer()->get_listen_socket()); /*Applies socket to data set again*/
                     incomingData.set_peer_id(0); /*Set to self*/
                     PacketType incomingPacketType = incomingData.get_packet_type();
-
+                    accessUDTP->display_msg("PEER is processing packet deduction");
                     /*USE packet type and build correctly. here*/
                     if(incomingPacketType == Header)
                     {
+                        accessUDTP->display_msg("PEER has deduced the packet as a Header and is now processing");
                         UDTPHeader readHeader(incomingData);
                         accessUDTP->process_header(readHeader);
                     }
                     if(incomingPacketType == Path)
                     {
+                        accessUDTP->display_msg("PEER has deduced the packet as a Path and is now processing");
                         UDTPPath readPath(incomingData);
                         accessUDTP->process_path(readPath);
                     }
                     if(incomingPacketType == Acknowledge)
                     {
+                         accessUDTP->display_msg("PEER has deduced the packet as an Acknowledge and is now processing");
                         UDTPAcknowledge readAcknowledge(incomingData);
                         accessUDTP->process_acknowledge(readAcknowledge);
                     }
                     if(incomingPacketType == Handshake)
                     {
+                        accessUDTP->display_msg("PEER has deduced the packet as a Handshake and is now processing");
                         UDTPHandshake readHandshake(incomingData);
                         accessUDTP->process_handshake(readHandshake);
                     }
+                    accessUDTP->display_msg("PEER has completed packet processing");
                 }
                 else
                 {

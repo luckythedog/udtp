@@ -7,6 +7,7 @@
 class UDTPData;
 enum HandshakeType{
     /*Sent through TCP*/
+    HandshakeStart = 0x50, /*This is sent out from the server to the client so the client will be flagged to send required packets*/
     HandshakeVersion = 0x51,
     HandshakeChunkSize = 0x52,
     HandshakeFlowSocket = 0x53,

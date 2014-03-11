@@ -1,10 +1,10 @@
 # depslib dependency file v1.0
-1393801155 source:/home/lucky/workspace/UDTP/main.cpp
+1394516389 source:/home/lucky/workspace/UDTP/main.cpp
 	<iostream>
 	<cstring>
 	"UDTP.h"
 
-1394516139 source:/home/lucky/workspace/UDTP/UDTP.cpp
+1394517832 source:/home/lucky/workspace/UDTP/UDTP.cpp
 	"UDTP.h"
 	"UDTPSetup.h"
 	"UDTPPacket.h"
@@ -52,9 +52,10 @@
 	"UDTPPacket.h"
 	<cstring>
 
-1393751511 /home/lucky/workspace/UDTP/UDTPSetup.h
+1394516694 /home/lucky/workspace/UDTP/UDTPSetup.h
 	<string>
 	<queue>
+	<iostream>
 	"UDTPSettings.h"
 
 1391913718 /home/lucky/workspace/UDTP/UDTPConfig.h
@@ -108,10 +109,11 @@
 	"UDTPAcknowledge.h"
 	"UDTPData.h"
 
-1393751002 /home/lucky/workspace/UDTP/UDTPSettings.h
+1394516740 /home/lucky/workspace/UDTP/UDTPSettings.h
 	<climits>
 	<string>
 	<queue>
+	<iostream>
 
 1391914671 source:/home/lucky/workspace/UDTP/UDTPWhine.cpp
 	"UDTPWhine.h"
@@ -121,7 +123,7 @@
 	"UDTPHandshake.h"
 	"UDTPData.h"
 
-1393755308 /home/lucky/workspace/UDTP/UDTPHandshake.h
+1394517314 /home/lucky/workspace/UDTP/UDTPHandshake.h
 	<stdint.h>
 	<vector>
 	"UDTPPacket.h"

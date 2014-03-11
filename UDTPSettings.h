@@ -3,10 +3,11 @@
 #include <climits>
 #include <string>
 #include <queue>
+#include <iostream>
 /*These are settings for UDTP, don't confuse this with UDTPSetup!*/
 #define UDTP_VERSION_NUMBER 0x0001
 
-#define UDTP_DEBUG_ENABLED false /*set this for debugging messages*/
+#define UDTP_DEBUG_ENABLED true /*set this for debugging messages*/
 
 #define DEFAULT_CHUNK_SIZE_AGREEMENT 420
 #define DEFAULT_MAX_CHUNK_SIZE 1024
@@ -19,8 +20,9 @@
 #define DEFAULT_MAX_CONNECTIONS 5
 
 
+
 namespace UDTPSettings{
-    /*Sets all defaults! These are used for global use. They can be edited with UDTPSetup.*/
+        /*Sets all defaults! These are used for global use. They can be edited with UDTPSetup.*/
     static unsigned short VERSION_NUMBER = UDTP_VERSION_NUMBER;
     static bool DEBUG_ENABLED = UDTP_DEBUG_ENABLED;
 
@@ -35,8 +37,6 @@ namespace UDTPSettings{
     static unsigned short NUMBER_OF_THREADS = DEFAULT_NUMBER_OF_THREADS;
 
 
-
 };
-
 
 #endif

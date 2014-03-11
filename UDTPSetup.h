@@ -8,6 +8,7 @@
 #define __UDTPSETUP
 #include <string>
 #include <queue>
+#include <iostream>
 #include "UDTPSettings.h"
 
 class UDTPSetup{
@@ -60,8 +61,8 @@ class UDTPSetup{
 
         unsigned short get_version() { return UDTPSettings::VERSION_NUMBER;};
 
-        bool get_debug_enabled() { return UDTPSettings::DEBUG_ENABLED;};
-        bool set_debug_enabled(bool newValue) { UDTPSettings::DEBUG_ENABLED = newValue;};
+        static bool get_debug_enabled() { return UDTPSettings::DEBUG_ENABLED;};
+        static bool set_debug_enabled(bool newValue) { UDTPSettings::DEBUG_ENABLED = newValue; };
 
         bool add_available_port(unsigned int portReuse) { _reusablePorts.push(portReuse);};
         unsigned int reuse_available_port() {
