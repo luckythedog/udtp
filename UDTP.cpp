@@ -137,6 +137,7 @@ bool UDTP::send_listen_data(UDTPData& data)
 {
     if(get_socket_type() == PEER) display_msg("PEER has sent out data using send_listen_data()");
     if(get_socket_type() == HOST) display_msg("HOST has sent out data using send_listen_data()");
+
     send(data.get_socket_id(), data.get_raw_buffer(), data.get_packet_size(), 0); /*The UDTPData's socket id is used to denote where to send the packet. The socket id is handled in the polling threads. For HOSTS, the socket id
                                                                                                                     will be the receiving socket's file descriptor. For PEER, it will always be its own _listenSocket being that that is where the central receiving and sending
                                                                                                                     happens.*/
@@ -636,7 +637,7 @@ void* UDTP::listenThreadFunc(void* args)
                 {
                     accessUDTP->display_msg("PEER has received incoming packet");
                     UDTPData incomingData(packetDeduction); //*Use UDTPData class to get packet type more easily, and also get unsigned short of file size to read.
-                    recv(accessUDTP->_listenSocket, (char*)incomingData.write_to_buffer(), incomingData.get_packet_size(), 0);
+                    recv(accessUDTP->_listenSocket, (char*)incomingData.write_to_buffer(), incomingData.get_packet_size(), 0); /*Takes data in!*/
                     incomingData.set_socket_id(accessUDTP->self_peer()->get_listen_socket()); /*Applies socket to data set again*/
                     incomingData.set_peer_id(0); /*Set to self*/
                     PacketType incomingPacketType = incomingData.get_packet_type();
@@ -741,5 +742,6 @@ SocketType UDTP::get_socket_type()
 }
 bool UDTP::alive()
 {
+
     return _isAlive;
 }

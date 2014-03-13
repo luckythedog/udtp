@@ -30,7 +30,7 @@ class UDTPSetup{
         unsigned int get_port() { return _port; };
 
         bool set_ip(std::string ip) { _ip = ip;};
-        bool set_port(unsigned int port) { _port = port; };
+        bool set_port(unsigned int port) { _port = port; _currentPort = port;};
             /*Gettors for these are provided at UDTPSettings::get_chunk_size_agreement(), etc.*/
 
 
