@@ -11,7 +11,7 @@ class UDTPHeader;
 
 class UDTPFile{
     public:
-        UDTPFile();
+        UDTPFile(UDTPPacketHeader header);
         ~UDTPFile();
         UDTPFile(UDTPPath pathOfFile); /*Creates from a path only*/
 

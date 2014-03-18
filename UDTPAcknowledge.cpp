@@ -1,7 +1,14 @@
 #include "UDTPAcknowledge.h"
 /*Implementations after class forward declaration*/
-#include "UDTPData.h"
 
-
- UDTPAcknowledge::UDTPAcknowledge(UDTPData& _data){
+ UDTPAcknowledge::UDTPAcknowledge(UDTPPacketHeader packet){
  }
+
+char* UDTPAcknowledge::get_raw_buffer(){
+    return 0;
+}
+
+bool UDTPAcknowledge::unpack()
+{
+    return true;
+}

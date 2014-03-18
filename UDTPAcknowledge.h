@@ -10,35 +10,39 @@ enum AcknowledgeType{
 };
 class UDTPAcknowledge : public UDTPPacket{
     public:
-        UDTPAcknowledge(UDTPData& _data); /*Unpacks an Acknowledgement*/
+        UDTPAcknowledge(UDTPPacketHeader packet); /*Unpacks an Acknowledgement*/
 
         UDTPAcknowledge(AcknowledgeType acknowledgeType, unsigned short fileID) {
-            _packetType = Acknowledge;
+            _header.packetType = Acknowledge;
             _missingChunksCount  = 0;
             _fileID = fileID;
             _acknowledgeType = acknowledgeType;
            _responseCode = ResponseNone;
         };
 
-    bool add_missing_chunk(unsigned short chunkID) {
-        std::stringstream tempMissingChunkStream;
-        tempMissingChunkStream << _missingChunks << std::hex << chunkID; /*Each chunk is seperated by 2 bytes. So we know exactly where to cut!*/
-        _missingChunks = tempMissingChunkStream.str();
-        _missingChunksCount++;
-    };
-    const char* get_missing_chunks() { return _missingChunks.c_str();};
-    unsigned short get_missing_chunks_count() { return _missingChunksCount;};
+        bool add_missing_chunk(unsigned short chunkID) {
+            std::stringstream tempMissingChunkStream;
+            tempMissingChunkStream << _missingChunks << std::hex << chunkID; /*Each chunk is seperated by 2 bytes. So we know exactly where to cut!*/
+            _missingChunks = tempMissingChunkStream.str();
+            _missingChunksCount++;
+        };
+        const char* get_missing_chunks() { return _missingChunks.c_str();};
+        unsigned short get_missing_chunks_count() { return _missingChunksCount;};
 
-    unsigned short get_file_id() { return _fileID; };
-    bool set_file_id(unsigned short fileID) { _fileID = fileID;};
+        unsigned short get_file_id() { return _fileID; };
+        bool set_file_id(unsigned short fileID) { _fileID = fileID;};
 
-    unsigned short get_chunk_id() { return _chunkID;};
-    bool set_chunk_id(unsigned short chunkID) { _chunkID = chunkID;};
+        unsigned short get_chunk_id() { return _chunkID;};
+        bool set_chunk_id(unsigned short chunkID) { _chunkID = chunkID;};
 
-    ResponseCode get_response_code(){ return _responseCode;};
-    bool set_response_code(ResponseCode responseCode) { responseCode = _responseCode;};
+        ResponseCode get_response_code(){ return _responseCode;};
+        bool set_response_code(ResponseCode responseCode) { responseCode = _responseCode;};
 
-    AcknowledgeType get_acknowledge_type() { return _acknowledgeType;};
+        AcknowledgeType get_acknowledge_type() { return _acknowledgeType;};
+
+        /* must impliment pure virtual functions */
+        char* get_raw_buffer();
+        bool unpack();
     private:
         unsigned short _missingChunksCount;
         std::string _missingChunks;

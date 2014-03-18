@@ -18,8 +18,8 @@ class UDTPData;
 
 class UDTPPath : public UDTPPacket{
     public:
+        UDTPPath(UDTPPacketHeader header);
         UDTPPath();
-        UDTPPath(UDTPData& data);
 
         UDTPPath(std::string addressPath) { /*Creates a new path from a string.*/
             _addressPath = addressPath;
@@ -30,7 +30,12 @@ class UDTPPath : public UDTPPacket{
         const char* get_return_path() { return _returnPath.c_str();};
 
         char* get_filename();/*Dissects filename from addressPath then returns it here, if none it will return empty*/
-      char* get_directory(); /*Dissects directory from addressPath then returns it here, if none it will return empty*/
+        char* get_directory(); /*Dissects directory from addressPath then returns it here, if none it will return empty*/
+
+        /* must impliment pure virtual functions */
+        char* get_raw_buffer();
+        bool unpack();
+
     private:
         std::string _addressPath;
         std::string _returnPath; /*If there is a return from the destination, it will be stored here and the response code should be changed to ResponseApproved*/

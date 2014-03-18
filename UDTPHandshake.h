@@ -4,7 +4,6 @@
 #include <vector>
 #include "UDTPPacket.h"
 
-class UDTPData;
 enum HandshakeType{
     /*Sent through TCP*/
     HandshakeStart = 0x50, /*This is sent out from the server to the client so the client will be flagged to send required packets*/
@@ -19,10 +18,18 @@ enum HandshakeType{
 };
 class UDTPHandshake : public UDTPPacket{
     public:
-        UDTPHandshake(UDTPData& data);
+        UDTPHandshake(UDTPPacketHeader packet);
+
         UDTPHandshake(HandshakeType handshakeType) {
             _handshakeType = handshakeType;
             _responseCode = ResponseNone; /*Unfulfilled handshake type*/
+            _header.packetSize = sizeof(UDTPHandshake);
+            _header.packetType = Handshake;
+            _raw = 0;
+        }
+
+        ~UDTPHandshake() {
+            if(_raw != 0) delete _raw;
         }
 
         HandshakeType get_handshake_type() { return _handshakeType; } /*gets header type*/
@@ -42,7 +49,11 @@ class UDTPHandshake : public UDTPPacket{
 
 
         bool set_flow_sockets_count(unsigned int amount){ _flowSocketsCount = amount;};
-       unsigned short get_flow_sockets_count() { return _flowSocketsCount;};
+        unsigned short get_flow_sockets_count() { return _flowSocketsCount;};
+
+        /* must impliment pure virtual functions */
+        char* get_raw_buffer();
+        bool unpack();
     private:
         /*Deals with HandshakeChunkSize*/
         unsigned short  _chunkSizeAgreement;
@@ -54,7 +65,6 @@ class UDTPHandshake : public UDTPPacket{
         unsigned short _destinationPort;
         /*Deals with all*/
         HandshakeType _handshakeType;
-        ResponseCode _responseCode;
 };
 
 

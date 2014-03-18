@@ -1,9 +1,10 @@
 #include "UDTPPath.h"
-#include "UDTPData.h"
 
-UDTPPath::UDTPPath(){
+UDTPPath::UDTPPath(UDTPPacketHeader header){
+    // TODO
 }
-UDTPPath::UDTPPath(UDTPData& data)
+
+UDTPPath::UDTPPath()
 {
 
 }
@@ -14,4 +15,12 @@ char* UDTPPath::get_filename()
 }
 char* UDTPPath::get_directory(){
     return NULL;
+}
+
+char* UDTPPath::get_raw_buffer(){
+}
+
+bool UDTPPath::unpack()
+{
+    return true;
 }

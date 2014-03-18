@@ -13,6 +13,7 @@ enum PacketType{
     Chunk = 0x04,
     Acknowledge = 0x05
 };
+
 enum ResponseCode{
     ResponseNone = 0xF0,  /*Every response code starts out with none. Tihs means the request is unfulfilled.*/
     ResponseApproved = 0xF1,
@@ -26,14 +27,19 @@ enum ResponseCode{
     ResponseCriticalError = 0xF8 /*This will make the client FORCE quit the client with a error message.*/
 };
 
+struct UDTPPacketHeader {
+    unsigned short packetSize;
+    PacketType packetType;
+};
+
 class UDTPPacket{
     public:
         /*There is no UDTPPacket constructor, since we will never use it!*/
         ResponseCode get_response_code() { return _responseCode; };
         bool set_response_code(ResponseCode responseCode) { _responseCode = responseCode; return true;};
 
-        PacketType get_packet_type() { return _packetType; };
-        bool set_packet_type(PacketType packetType) { _packetType = packetType; return true;};
+        PacketType get_packet_type() { return _header.packetType; };
+        bool set_packet_type(PacketType packetType) { _header.packetType = packetType; return true;};
 
         unsigned int get_socket_id() { return _socketID;};
         bool set_socket_id(unsigned int socketID) { _socketID = socketID;};
@@ -41,13 +47,25 @@ class UDTPPacket{
         unsigned int get_peer_id() { return _peerID;};
         bool set_peer_id(unsigned int peerID) { _peerID = peerID;};
 
+        /* JH - Integrated UDTPData into generic packet structure. */
+        unsigned short get_packet_size() { return _header.packetSize;};
+        virtual bool set_raw_buffer(char* raw){ _raw = raw; };
+        virtual char& write_to_buffer() {return  *_raw;};
+
+        /* JH - Pure virtual function that derived packets must impliment */
+        virtual char* get_raw_buffer() = 0; /*Retrieves transferable character buffer*/
+        virtual bool unpack() = 0;
     protected:
+        /*These can be transmitted*/
+        UDTPPacketHeader _header;
+        ResponseCode _responseCode; /*Not every packet uses a response code, like Chunk or Whine -- since those do not need a response.*/
+
         /*Local variables! They will NOT transmit through the network!*/
         unsigned int _peerID; /*It's numerical location in the peer's list*/
-       unsigned int _socketID; /*Optional holder*/ /*Since indexes and sockets are different entirely on each system! These are local!*/
-       /*These can be transmitted*/
-        PacketType _packetType;
-        ResponseCode _responseCode; /*Not every packet uses a response code, like Chunk or Whine -- since those do not need a response.*/
+        unsigned int _socketID; /*Optional holder*/ /*Since indexes and sockets are different entirely on each system! These are local!*/
+        char* _raw; /*This is the holder for raw data*/
+
+
 };
 #endif
 

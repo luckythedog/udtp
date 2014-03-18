@@ -25,10 +25,10 @@
 /*Include necessary libraries of UDTP*/
 #include "UDTPSettings.h"
 #include "UDTPSetup.h"
+#include "UDTPPacket.h"
 class UDTPSetup;
 class UDTPPath;
 class UDTPFile;
-class UDTPData;
 class UDTPHeader;
 class UDTPChunk;
 class UDTPAcknowledge;
@@ -80,7 +80,7 @@ public:
     bool start_listen_thread(); /*Starts listen thread*/
     bool start_flow_sockets(unsigned int peerID); /*Starts flow sockets for a certain peer ID*/
 
-    void send_flow_data(UDTPFlowThreadData* threadFlowData, UDTPData& data); //*Different types of sockets, Listen goes to TCP and Flow goes to UDP*/
+    void send_flow_data(UDTPFlowThreadData* threadFlowData, UDTPPacket& packet); //*Different types of sockets, Listen goes to TCP and Flow goes to UDP*/
     bool send_flow_links(unsigned int peerID);
     bool start_flow_threads(unsigned int peerID);
     bool send_required_packets();
@@ -93,7 +93,7 @@ public:
     bool send_peer_init_completed(unsigned int peerID);
 
 
-    bool send_listen_data(UDTPData& data); /*Starts listen*/
+    bool send_listen_data(UDTPPacket& packet); /*Starts listen*/
 
     SocketType get_socket_type();
     bool alive();

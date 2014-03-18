@@ -4,6 +4,10 @@
 /*Settings*/
 #include "UDTPSettings.h"
 
+UDTPFile::UDTPFile(UDTPPacketHeader header)
+{
+    // TODO
+}
 
 UDTPFile::UDTPFile(UDTPPath pathOfFile)
 {

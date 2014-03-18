@@ -3,7 +3,6 @@
 #include "UDTPPacket.h"
 
 class UDTPFile;
-class UDTPData;
 class UDTPPath;
 
 enum HeaderType{
@@ -14,7 +13,7 @@ enum HeaderType{
 class UDTPHeader : public UDTPPacket{
     public:
     ~UDTPHeader();
-        UDTPHeader(UDTPData& data); /*Unpacks a header from UDTPData*/
+        UDTPHeader(UDTPPacketHeader header); /*Unpacks a header from UDTPPacket*/
         UDTPHeader(HeaderType headerType, UDTPFile* file); /*Creates a header from a file. If it is a push request, it will fill in numberOfChunks and sizeOfFile.
                                                                                         If it is a pull request, it will only take the path to the file.*/
 
@@ -35,7 +34,9 @@ class UDTPHeader : public UDTPPacket{
 
         UDTPPath& get_path_of_file();
 
-
+        /* must impliment pure virtual functions */
+        char* get_raw_buffer();
+        bool unpack();
 
     private:
         UDTPPath* _pathOfFile;

@@ -1,6 +1,5 @@
 #include "UDTPHeader.h"
 /*Implementations after forward declaration*/
-#include "UDTPData.h"
 #include "UDTPFile.h"
 #include "UDTPPath.h"
 
@@ -8,8 +7,12 @@ UDTPHeader::~UDTPHeader(){
     _pathOfFile = NULL;
 }
 
-UDTPHeader::UDTPHeader(UDTPData& data){
+UDTPHeader::UDTPHeader(UDTPPacketHeader header){
+    _header = header;
+    // TODO - need to allocate _raw buffer size based on header.packetSize
+    // need to do this FOR ALL packet types;
 }
+
 UDTPHeader::UDTPHeader(HeaderType headerType, UDTPFile* file) {
     _headerType = headerType; /*Set header type*/
     _responseCode = ResponseNone; /*Set to unfulfilled response code*/
@@ -27,4 +30,11 @@ UDTPHeader::UDTPHeader(HeaderType headerType, UDTPFile* file) {
 }
 UDTPPath& UDTPHeader::get_path_of_file(){
     return *_pathOfFile;
+}
+
+char* UDTPHeader::get_raw_buffer(){
+}
+
+bool UDTPHeader::unpack(){
+    return true;
 }

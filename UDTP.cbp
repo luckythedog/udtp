@@ -42,8 +42,6 @@
 		<Unit filename="UDTPAddress.h" />
 		<Unit filename="UDTPChunk.cpp" />
 		<Unit filename="UDTPChunk.h" />
-		<Unit filename="UDTPData.cpp" />
-		<Unit filename="UDTPData.h" />
 		<Unit filename="UDTPFile.cpp" />
 		<Unit filename="UDTPFile.h" />
 		<Unit filename="UDTPFlowThreadData.cpp" />
