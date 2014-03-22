@@ -69,9 +69,9 @@ enum TransferReturn
 class UDTP
 {
 public:
-    UDTP(UDTPSetup settings)
+    UDTP(UDTPSetup setup)
     {
-        _myUDTP = settings;
+        _myUDTP = setup;
         _isAlive = false;
     }   /*Default constructor for both client and server*/
 
@@ -92,7 +92,6 @@ public:
     UDTPPeer* self_peer() { return _listPeers[0];}; /*Gets self peer which is stored at zero.*/
     bool send_peer_init_completed(unsigned int peerID);
 
-
     bool send_listen_data(UDTPPacket& packet); /*Starts listen*/
 
     SocketType get_socket_type();
@@ -100,7 +99,6 @@ public:
 
     TransferReturn send_file(UDTPPath addressPath);
     TransferReturn get_file(UDTPPath addressPath);
-
 
     bool process_handshake(UDTPHandshake& handshake);
     bool process_header(UDTPHeader& readHeader);
@@ -113,6 +111,12 @@ public:
 
     void display_msg(std::string message); /*Displays message on console*/
     bool stop(); /*Stop server/client. This will eject anything and everything no matter what.*/
+
+    unsigned short get_next_file_id(){
+        _fileIDCount++;
+        return _fileIDCount;
+    }
+
 private:
 
 
@@ -131,8 +135,9 @@ private:
 
     /*Both server and client use this*/
     unsigned int _listenSocket; /*Holds TCP socket*/
-    std::vector<unsigned int> _flowSockets; /*Holds UDP socket*/
 
+    /*Current file count*/
+    unsigned int _fileIDCount = 0;
 
 
 };

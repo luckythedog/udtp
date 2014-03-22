@@ -11,6 +11,34 @@
 #include <iostream>
 #include "UDTPSettings.h"
 
+/*These are DEFAULT settings for UDTP*/
+#define UDTP_VERSION_NUMBER 0x0001
+
+#define UDTP_DEBUG_ENABLED true /*set this for debugging messages*/
+
+#define DEFAULT_CHUNK_SIZE_AGREEMENT 420
+#define DEFAULT_MAX_CHUNK_SIZE 1024
+#define DEFAULT_MIN_CHUNK_SIZE 256
+#define DEFAULT_ENCRYPT_AUTOMATICALLY false
+
+#define DEFAULT_MAX_NUMBER_OF_FLOW_SOCKETS 5 /*Number of flow sockets opened per connection*/
+
+#define DEFAULT_MAX_CONNECTIONS 5
+
+struct UDTPSettings{
+    /*Sets all defaults! These are used for global use. They can be edited with UDTPSetup.*/
+    static unsigned short VERSION_NUMBER = UDTP_VERSION_NUMBER;
+
+    bool DEBUG_ENABLED = UDTP_DEBUG_ENABLED;
+
+    std::string ROOT_DIRECTORY = ""; /*Blank means it's just going to be where the exe is*/
+
+    unsigned short CHUNK_SIZE_AGREEMENT  =  DEFAULT_CHUNK_SIZE_AGREEMENT; /*So everyone can access it. It's on default setting*/
+    unsigned short MAX_CHUNK_SIZE = DEFAULT_MAX_CHUNK_SIZE;
+    unsigned short MIN_CHUNK_SIZE = DEFAULT_MIN_CHUNK_SIZE;
+    unsigned short MAX_NUMBER_OF_FLOW_SOCKETS = DEFAULT_MAX_NUMBER_OF_FLOW_SOCKETS;
+};
+
 class UDTPSetup{
     public:
     UDTPSetup(){ };
@@ -31,39 +59,40 @@ class UDTPSetup{
 
         bool set_ip(std::string ip) { _ip = ip;};
         bool set_port(unsigned int port) { _port = port; _currentPort = port;};
-            /*Gettors for these are provided at UDTPSettings::get_chunk_size_agreement(), etc.*/
+            /*Gettors for these are provided at _settings.get_chunk_size_agreement(), etc.*/
 
 
-        bool set_number_of_flow_sockets(unsigned short numOfFlowSockets) { UDTPSettings::NUMBER_OF_FLOW_SOCKETS = numOfFlowSockets;} /*Server use only!*/
-        bool get_number_of_flow_sockets() { return UDTPSettings::NUMBER_OF_FLOW_SOCKETS;};
+        bool set_number_of_flow_sockets(unsigned short numOfFlowSockets) { _settings.NUMBER_OF_FLOW_SOCKETS = numOfFlowSockets;} /*Server use only!*/
+        bool get_number_of_flow_sockets() { return _settings.NUMBER_OF_FLOW_SOCKETS;};
 
         bool set_number_of_threads(unsigned short numOfThreads) {
             if(numOfThreads >= get_number_of_flow_sockets()){ /*Number of threads MUST be more than or equal to flow sockets*/
-            UDTPSettings::NUMBER_OF_THREADS  = numOfThreads;
+            _settings.NUMBER_OF_THREADS  = numOfThreads;
             return true;
             }else{
                 return false;
             }
             };
-        unsigned short get_number_of_threads() { return UDTPSettings::NUMBER_OF_THREADS;};
+        unsigned short get_number_of_threads() { return _settings.NUMBER_OF_THREADS;};
 
-        bool set_min_chunk_size(unsigned short minChunkSize){ UDTPSettings::MIN_CHUNK_SIZE = minChunkSize; return true;};
-        unsigned short get_min_chunk_size() { return UDTPSettings::MIN_CHUNK_SIZE;};
+        bool set_min_chunk_size(unsigned short minChunkSize){ _settings.MIN_CHUNK_SIZE = minChunkSize; return true;};
+        unsigned short get_min_chunk_size() { return _settings.MIN_CHUNK_SIZE;};
 
-        bool set_max_chunk_size(unsigned short maxChunkSize){ UDTPSettings::MAX_CHUNK_SIZE = maxChunkSize;};
-        unsigned short get_max_chunk_size() { return UDTPSettings::MAX_CHUNK_SIZE;};
+        bool set_max_chunk_size(unsigned short maxChunkSize){ _settings.MAX_CHUNK_SIZE = maxChunkSize;};
+        unsigned short get_max_chunk_size() { return _settings.MAX_CHUNK_SIZE;};
 
-        bool set_chunk_size_agreement(unsigned short chunkSizeAgreement){ UDTPSettings::CHUNK_SIZE_AGREEMENT = chunkSizeAgreement; return true;};
-        unsigned short get_chunk_size_agreement() { return UDTPSettings::CHUNK_SIZE_AGREEMENT;};
+        bool set_chunk_size_agreement(unsigned short chunkSizeAgreement){ _settings.CHUNK_SIZE_AGREEMENT = chunkSizeAgreement; return true;};
+        unsigned short get_chunk_size_agreement() { return _settings.CHUNK_SIZE_AGREEMENT;};
 
-        bool set_root_directory(std::string rootDirectory){ UDTPSettings::ROOT_DIRECTORY = rootDirectory; return true;};
-        std::string get_root_directory() { return UDTPSettings::ROOT_DIRECTORY;};
+        bool set_root_directory(std::string rootDirectory){ _settings.ROOT_DIRECTORY = rootDirectory; return true;};
+        std::string get_root_directory() { return _settings.ROOT_DIRECTORY;};
 
-        unsigned short get_version() { return UDTPSettings::VERSION_NUMBER;};
+        unsigned short get_version() { return _settings.VERSION_NUMBER;};
 
-        static bool get_debug_enabled() { return UDTPSettings::DEBUG_ENABLED;};
-        static bool set_debug_enabled(bool newValue) { UDTPSettings::DEBUG_ENABLED = newValue; };
+        static bool get_debug_enabled() { return _settings.DEBUG_ENABLED;};
+        static bool set_debug_enabled(bool newValue) { _settings.DEBUG_ENABLED = newValue; };
 
+        // TODO: Should fix port code to account for conflict
         bool add_available_port(unsigned int portReuse) { _reusablePorts.push(portReuse);};
         unsigned int reuse_available_port() {
             unsigned int portReuse = _reusablePorts.front();
@@ -77,18 +106,12 @@ class UDTPSetup{
                     return nextAvailablePort;
             };
 
-        bool reset_file_id_count(){ UDTPSettings::FILE_ID_COUNT = 0; return true;};
-
-        unsigned short get_next_file_id(){
-            UDTPSettings::FILE_ID_COUNT++;
-            return UDTPSettings::FILE_ID_COUNT;
-        }
-
     private:
         std::string _ip;
         unsigned int _port;
         unsigned int _currentPort;
         std::queue<unsigned int> _reusablePorts;
+        UDTPSettings _settings;
 };
 
 
