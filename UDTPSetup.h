@@ -26,7 +26,8 @@
 
 struct UDTPSettings{
     /*Sets all defaults! These are used for global use. They can be edited with UDTPSetup.*/
-    static const unsigned short VERSION_NUMBER = UDTP_VERSION_NUMBER;
+    // TODO: We need to find a way to make this const and allow peerSetup to still compare versions
+    unsigned short VERSION_NUMBER;
 
     bool DEBUG_ENABLED;
 
@@ -78,6 +79,7 @@ class UDTPSetup{
         bool set_root_directory(std::string rootDirectory){ _settings.ROOT_DIRECTORY = rootDirectory; return true;};
         std::string get_root_directory() { return _settings.ROOT_DIRECTORY;};
 
+        bool set_version(unsigned short version) { _settings.VERSION_NUMBER = version; return true;};
         unsigned short get_version() { return _settings.VERSION_NUMBER;};
 
         bool get_debug_enabled() { return _settings.DEBUG_ENABLED;};
@@ -98,6 +100,8 @@ class UDTPSetup{
             };
 
         void setDefaults(){
+            _settings.VERSION_NUMBER = UDTP_VERSION_NUMBER;
+
             _settings.ROOT_DIRECTORY = ""; /*Blank means it's just going to be where the exe is*/
 
             _settings.CHUNK_SIZE_AGREEMENT = DEFAULT_CHUNK_SIZE_AGREEMENT; /*So everyone can access it. It's on default setting*/

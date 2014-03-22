@@ -185,7 +185,7 @@
 	<string>
 	"UDTP.h"
 
-1395458894 /home/justin/Projects/udtp/UDTP.h
+1395472811 /home/justin/Projects/udtp/UDTP.h
 	<vector>
 	<cstring>
 	<queue>
@@ -208,12 +208,12 @@
 	<queue>
 	<iostream>
 
-1395458862 /home/justin/Projects/udtp/UDTPSetup.h
+1395470083 /home/justin/Projects/udtp/UDTPSetup.h
 	<string>
 	<queue>
 	<iostream>
 
-1395459039 source:/home/justin/Projects/udtp/UDTP.cpp
+1395480721 source:/home/justin/Projects/udtp/UDTP.cpp
 	"UDTP.h"
 	"UDTPSetup.h"
 	"UDTPPacket.h"
@@ -229,14 +229,14 @@
 	<fstream>
 	<string.h>
 
-1395458001 /home/justin/Projects/udtp/UDTPPacket.h
+1395476378 /home/justin/Projects/udtp/UDTPPacket.h
 
 1394590999 /home/justin/Projects/udtp/UDTPData.h
 	<iostream>
 	"UDTPPacket.h"
 	<cstring>
 
-1395458001 /home/justin/Projects/udtp/UDTPPath.h
+1395470512 /home/justin/Projects/udtp/UDTPPath.h
 	<string>
 	<iostream>
 	"UDTPPacket.h"
@@ -249,17 +249,17 @@
 	"UDTPChunk.h"
 	"UDTPPath.h"
 
-1395458001 /home/justin/Projects/udtp/UDTPChunk.h
+1395470512 /home/justin/Projects/udtp/UDTPChunk.h
 	"UDTPPacket.h"
 
-1395458001 /home/justin/Projects/udtp/UDTPHeader.h
+1395470512 /home/justin/Projects/udtp/UDTPHeader.h
 	"UDTPPacket.h"
 
-1395458001 /home/justin/Projects/udtp/UDTPAcknowledge.h
+1395470512 /home/justin/Projects/udtp/UDTPAcknowledge.h
 	"UDTPPacket.h"
 	<sstream>
 
-1395458001 /home/justin/Projects/udtp/UDTPHandshake.h
+1395475176 /home/justin/Projects/udtp/UDTPHandshake.h
 	<stdint.h>
 	<vector>
 	"UDTPPacket.h"
@@ -276,16 +276,16 @@
 	<netinet/in.h>
 	<arpa/inet.h>
 
-1395458001 /home/justin/Projects/udtp/UDTPPeer.h
+1395470022 /home/justin/Projects/udtp/UDTPPeer.h
 	<vector>
 	<sys/socket.h>
 	<netinet/in.h>
 	<arpa/inet.h>
 
-1395458001 source:/home/justin/Projects/udtp/UDTPAcknowledge.cpp
+1395470512 source:/home/justin/Projects/udtp/UDTPAcknowledge.cpp
 	"UDTPAcknowledge.h"
 
-1395458001 source:/home/justin/Projects/udtp/UDTPChunk.cpp
+1395470512 source:/home/justin/Projects/udtp/UDTPChunk.cpp
 	"UDTPChunk.h"
 	"UDTPAcknowledge.h"
 
@@ -308,16 +308,19 @@
 	"UDTPAddress.h"
 	"UDTPPeer.h"
 
-1395458001 source:/home/justin/Projects/udtp/UDTPHandshake.cpp
+1395476849 source:/home/justin/Projects/udtp/UDTPHandshake.cpp
 	"UDTPHandshake.h"
+	"UDTPSetup.h"
+	"UDTPPeer.h"
+	"UDTP.h"
 	<string.h>
 
-1395458001 source:/home/justin/Projects/udtp/UDTPHeader.cpp
+1395470512 source:/home/justin/Projects/udtp/UDTPHeader.cpp
 	"UDTPHeader.h"
 	"UDTPFile.h"
 	"UDTPPath.h"
 
-1395458001 source:/home/justin/Projects/udtp/UDTPPath.cpp
+1395470512 source:/home/justin/Projects/udtp/UDTPPath.cpp
 	"UDTPPath.h"
 
 1395458001 source:/home/justin/Projects/udtp/UDTPPeer.cpp

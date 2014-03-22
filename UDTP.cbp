@@ -55,7 +55,6 @@
 		<Unit filename="UDTPPath.h" />
 		<Unit filename="UDTPPeer.cpp" />
 		<Unit filename="UDTPPeer.h" />
-		<Unit filename="UDTPSettings.h" />
 		<Unit filename="UDTPSetup.h" />
 		<Unit filename="main.cpp" />
 		<Extensions>

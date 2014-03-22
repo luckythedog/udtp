@@ -5,6 +5,8 @@
 #ifndef __UDTP_PACKET
 #define __UDTP_PACKET
 
+class UDTP;
+
 enum PacketType{
     Packet = 0x00,
     Handshake = 0x01,
@@ -14,17 +16,30 @@ enum PacketType{
     Acknowledge = 0x05
 };
 
+// TODO: Suggest renaming to PacketCode
 enum ResponseCode{
+    /* Generic packet codes */
     ResponseNone = 0xF0,  /*Every response code starts out with none. Tihs means the request is unfulfilled.*/
     ResponseApproved = 0xF1,
     ResponseRejected = 0xF2,
+    ResponseRetry = 0xF7, /*Just in case server is not ready to provide something, he will ask client to retry the packet again at a different time*/
+    ResponseCriticalError = 0xF8, /*This will make the client FORCE quit the client with a error message.*/
+
+    /* TODO: move these to file packet code */
     ResponseFileNotFound = 0xF3,
     ResponseFileExistsAlready = 0xF4,
+
+
+    /* TODO: move this to path packet code */
     ResponseListingFound= 0xF5,
     ResponseInvalidPath = 0xF6,
 
-    ResponseRetry = 0xF7, /*Just in case server is not ready to provide something, he will ask client to retry the packet again at a different time*/
-    ResponseCriticalError = 0xF8 /*This will make the client FORCE quit the client with a error message.*/
+
+    /* TODO: move this to handshake packet code */
+    HandshakeInitiation = 0x50,
+    HandshakeResponse = 0x51,
+    HandshakeConfirmation = 0x52,
+
 };
 
 struct UDTPPacketHeader {
@@ -54,7 +69,8 @@ class UDTPPacket{
 
         /* JH - Pure virtual function that derived packets must impliment */
         virtual char* get_raw_buffer() = 0; /*Retrieves transferable character buffer*/
-        virtual bool unpack() = 0;
+        virtual bool process(UDTP* myUDTP) = 0;
+
     protected:
         /*These can be transmitted*/
         UDTPPacketHeader _header;

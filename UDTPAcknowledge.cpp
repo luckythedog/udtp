@@ -8,7 +8,7 @@ char* UDTPAcknowledge::get_raw_buffer(){
     return 0;
 }
 
-bool UDTPAcknowledge::unpack()
+bool UDTPAcknowledge::process(UDTP* myUDTP)
 {
     return true;
 }

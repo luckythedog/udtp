@@ -20,7 +20,7 @@ char* UDTPPath::get_directory(){
 char* UDTPPath::get_raw_buffer(){
 }
 
-bool UDTPPath::unpack()
+bool UDTPPath::process(UDTP* myUDTP)
 {
     return true;
 }

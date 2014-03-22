@@ -36,8 +36,6 @@ class UDTPFlowThreadData;
 class UDTPAddress;
 class UDTPPeer;
 
-class UDTP;
-
 enum SocketType
 {
     HOST,
@@ -83,7 +81,6 @@ public:
     void send_flow_data(UDTPFlowThreadData* threadFlowData, UDTPPacket& packet); //*Different types of sockets, Listen goes to TCP and Flow goes to UDP*/
     bool send_flow_links(unsigned int peerID);
     bool start_flow_threads(unsigned int peerID);
-    bool send_required_packets();
 
     unsigned int add_peer(unsigned int listenSocketOfPeer); /*Adds peer and returns posID*/
     unsigned int find_peer_pos(unsigned int listenSocketOfPeer); /*Returns the positional ID of the peer*/
@@ -92,7 +89,7 @@ public:
     UDTPPeer* self_peer() { return _listPeers[0];}; /*Gets self peer which is stored at zero.*/
     bool send_peer_init_completed(unsigned int peerID);
 
-    bool send_listen_data(UDTPPacket& packet); /*Starts listen*/
+    bool send_listen_data(UDTPPacket* packet); /*Starts listen*/
 
     SocketType get_socket_type();
     bool alive();
@@ -100,11 +97,6 @@ public:
     TransferReturn send_file(UDTPPath addressPath);
     TransferReturn get_file(UDTPPath addressPath);
 
-    bool process_handshake(UDTPHandshake& handshake);
-    bool process_header(UDTPHeader& readHeader);
-    bool process_path(UDTPPath& readPath);
-    bool process_chunk(UDTPChunk& readChunk);
-    bool process_acknowledge(UDTPAcknowledge& readAcknowledge);
     static void* listenThreadFunc(void *args);
     static void* flowThreadsFunc(void*);
     static void* openFlowThread(void*);
@@ -120,6 +112,10 @@ public:
     unsigned short get_next_file_id(){
         _fileIDCount++;
         return _fileIDCount;
+    }
+
+    UDTPSetup* get_udtpsetup() {
+        return &_myUDTP;
     }
 
 private:

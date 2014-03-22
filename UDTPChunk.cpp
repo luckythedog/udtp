@@ -8,6 +8,6 @@ UDTPChunk::UDTPChunk(UDTPPacketHeader _header){ /*Unpacking of a UDTPChunk from 
 char* UDTPChunk::get_raw_buffer(){
 }
 
-bool UDTPChunk::unpack(){
+bool UDTPChunk::process(UDTP* myUDTP){
     return true;
 }
