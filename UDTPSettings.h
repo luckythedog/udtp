@@ -26,8 +26,7 @@ namespace UDTPSettings{
     static unsigned short VERSION_NUMBER = UDTP_VERSION_NUMBER;
     static bool DEBUG_ENABLED = UDTP_DEBUG_ENABLED;
 
-
-    static std::string ROOT_DIRECTORY = "/"; /*Blank means it's just going to be where the exe is*/
+    static std::string ROOT_DIRECTORY = "\"; /*Blank means it's just going to be where the exe is*/
 
     static unsigned int FILE_ID_COUNT = 0;
     static unsigned short CHUNK_SIZE_AGREEMENT  =  DEFAULT_CHUNK_SIZE_AGREEMENT; /*So everyone can access it. It's on default setting*/
