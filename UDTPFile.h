@@ -53,6 +53,7 @@ class UDTPFile{
         unsigned short _fileID;
         unsigned short _numberOfChunks;
         unsigned int _sizeOfFile;
+        unsigned int _chunkSize;
 
         bool _fileExists; /*Boolean for file existance. Depending on if the user used send or push, we will cancel
                                 immediately without sending a header if the file does not exist.*/

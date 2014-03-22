@@ -68,7 +68,7 @@ bool UDTP::start_flow_sockets(unsigned int peerID) /*Could be self peer id too!*
 {
     display_msg("Flow sockets have been started");
     if(get_socket_type() == PEER) peerID = 0; //Just making sure!*/
-    for(unsigned int flowCount = 0; flowCount<_myUDTP.get_number_of_flow_sockets(); flowCount++)
+    for(unsigned int flowCount = 0; flowCount<_myUDTP.get_max_number_of_flow_sockets(); flowCount++)
     {
         pthread_t flowThread; /*Creates thread*/
 
@@ -98,7 +98,7 @@ bool UDTP::start_flow_sockets(unsigned int peerID) /*Could be self peer id too!*
 bool UDTP::send_flow_links(unsigned int peerID)
 {
     display_msg("Flow links have been sent out");
-    for(unsigned int i=0; i<_myUDTP.get_number_of_flow_sockets(); i++)
+    for(unsigned int i=0; i<_myUDTP.get_max_number_of_flow_sockets(); i++)
     {
         UDTPHandshake handshakeFlowLink(HandshakeFlowLink);
         handshakeFlowLink.set_destination_port(ntohs(get_peer(peerID)->get_thread(i)->get_socket_address().sin_port)); /*Server holds their own version of peers. This will be their port number or client's port*/
@@ -115,7 +115,7 @@ bool UDTP::stop()
 bool UDTP::start_flow_threads(unsigned int peerID)
 {
     display_msg("Flow threads have been started");
-    for(unsigned int threadIndex=0; threadIndex<_myUDTP.get_number_of_flow_sockets(); threadIndex++)
+    for(unsigned int threadIndex=0; threadIndex<_myUDTP.get_max_number_of_flow_sockets(); threadIndex++)
     {
         pthread_create((pthread_t*)get_peer(peerID)->get_thread(threadIndex)->get_pthread(), NULL, UDTP::flowThreadsFunc, (UDTPFlowThreadData*)get_peer(peerID)->get_thread(threadIndex));
         pthread_tryjoin_np(get_peer(peerID)->get_thread(threadIndex)->get_pthread(), NULL);
@@ -211,7 +211,7 @@ bool UDTP::process_header(UDTPHeader& readHeader)
                 return false;
             }
             newFile.retrieve_info_from_local_file(); /*Get the information to send off*/
-            readHeader.set_file_id(_myUDTP.get_next_file_id()); //*Get that unique file ID!*/
+            readHeader.set_file_id(get_next_file_id()); //*Get that unique file ID!*/
             readHeader.set_response_code(ResponseApproved); /*Add the approving response code!*/
             readHeader.set_size_of_file(newFile.get_size_of_file());
             readHeader.set_number_of_chunks(newFile.get_number_of_chunks());
@@ -236,7 +236,7 @@ bool UDTP::process_header(UDTPHeader& readHeader)
                 return false;
             }
             readHeader.set_response_code(ResponseApproved);
-            readHeader.set_file_id(_myUDTP.get_next_file_id());
+            readHeader.set_file_id(get_next_file_id());
             newFile.set_number_of_chunks(readHeader.get_number_of_chunks());
             newFile.set_size_of_file(readHeader.get_size_of_file());
             /*We take their information.*/

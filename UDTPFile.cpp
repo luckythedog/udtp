@@ -1,8 +1,8 @@
 #include "UDTPFile.h"
 /*Implementations after forward class declaration*/
 #include "UDTPHeader.h"
-/*Settings*/
-#include "UDTPSettings.h"
+/*Setup*/
+#include "UDTPSetup.h"
 
 UDTPFile::UDTPFile(UDTPPacketHeader header)
 {
@@ -12,6 +12,8 @@ UDTPFile::UDTPFile(UDTPPacketHeader header)
 UDTPFile::UDTPFile(UDTPPath pathOfFile)
 {
     _pathOfFile = pathOfFile;
+    // TODO: pass the chunk size agreement
+    _chunkSize = DEFAULT_CHUNK_SIZE_AGREEMENT;
 }
 
 UDTPFile::~UDTPFile()
@@ -64,8 +66,8 @@ bool UDTPFile::retrieve_info_from_local_file()  /*Retrieves critical information
 
     unsigned short retrieveSizeOfFile = tempFileStream.tellg();
 
-    unsigned short retrieveNumberOfChunks = retrieveSizeOfFile / UDTPSettings::CHUNK_SIZE_AGREEMENT;
-    if((retrieveNumberOfChunks % UDTPSettings::CHUNK_SIZE_AGREEMENT) > 0)
+    unsigned short retrieveNumberOfChunks = retrieveSizeOfFile / _chunkSize;
+    if((retrieveNumberOfChunks % _chunkSize) > 0)
     {
         retrieveNumberOfChunks++;
     }

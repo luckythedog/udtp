@@ -23,7 +23,6 @@
 #include <windows.h>
 #endif
 /*Include necessary libraries of UDTP*/
-#include "UDTPSettings.h"
 #include "UDTPSetup.h"
 #include "UDTPPacket.h"
 class UDTPSetup;
@@ -73,6 +72,7 @@ public:
     {
         _myUDTP = setup;
         _isAlive = false;
+        _fileIDCount = 0;
     }   /*Default constructor for both client and server*/
 
     SocketReturn start(SocketType socketType); /*Starts Listen TCP socket*/
@@ -112,6 +112,11 @@ public:
     void display_msg(std::string message); /*Displays message on console*/
     bool stop(); /*Stop server/client. This will eject anything and everything no matter what.*/
 
+    bool reset_file_id(){
+        _fileIDCount = 0;
+        return true;
+    }
+
     unsigned short get_next_file_id(){
         _fileIDCount++;
         return _fileIDCount;
@@ -137,7 +142,7 @@ private:
     unsigned int _listenSocket; /*Holds TCP socket*/
 
     /*Current file count*/
-    unsigned int _fileIDCount = 0;
+    unsigned int _fileIDCount;
 
 
 };
