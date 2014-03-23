@@ -148,6 +148,7 @@ bool UDTP::send_peer_init_completed(unsigned int peerID)
 
 void* UDTP::listenThreadFunc(void* args)
 {
+    std::cout << "Here" << std::endl;
     bool sentRequiredPackets = false; /*For client*/
 
     UDTP *accessUDTP = (UDTP*) args;
@@ -280,23 +281,25 @@ void* UDTP::listenThreadFunc(void* args)
         } /*End of server code*/
         /***********End of Server Code*************/
 
-
+            activeListenSocketsPtr = &activeListenSockets[0]; /*This line fixes poll: Bad Address*/
         /*********Beginning of Client Code**********/
         if(accessUDTP->_socketType == PEER)
         {
-            activeListenSocketsPtr = &activeListenSockets[0]; /*This line fixes poll: Bad Address*/
+
             activeListenActivity = poll(activeListenSocketsPtr, activeListenSockets.size(), -1);
             if(activeListenActivity < 0 ) perror("poll_peer");
 
             if((activeListenSockets[0].revents & POLLIN))
             {
                 UDTPPacketHeader packetDeduction;
-                if((recv(accessUDTP->_listenSocket, &packetDeduction, sizeof(UDTPPacketHeader), 0)) != 0)
+                std::cout << sizeof(UDTPPacketHeader) << std::endl;
+                if((recv(accessUDTP->_listenSocket, &packetDeduction, sizeof(UDTPPacketHeader), MSG_WAITALL)) != 0)
                 {
                     packetDeduction.packetSize -= sizeof(UDTPPacketHeader); /*already recv packet header*/
                     accessUDTP->display_msg("PEER has received incoming packet");
 
-                    UDTPPacket *incomingData = 0;
+                    UDTPPacket *incomingData = NULL;
+                    char* incomingDataTemp;
 
                     /* Determine packet type and create new packet object */
                     accessUDTP->display_msg("PEER is processing packet deduction");
@@ -334,12 +337,15 @@ void* UDTP::listenThreadFunc(void* args)
                         incomingData = new UDTPHandshake(packetDeduction);
                         incomingData->set_socket_id(accessUDTP->self_peer()->get_listen_socket()); /*Applies socket to data set again*/
                         incomingData->set_peer_id(0); /*Set to self*/
-                        // TODO: RECV is erroring with "Bad address"
-                        if(recv(accessUDTP->_listenSocket, (char*)incomingData->write_to_buffer(), incomingData->get_packet_size(), 0) == -1)
+                        // TODO: Maybe make this more elegant or revise write_to_buffer!
+                        /* FIXED: Found problem, it dealt with write_to_buffer(), I just created a temp and allocated the size then read into that. I guess the bad address (pointer) was referring to char* address (pointer)*/
+                        incomingDataTemp = new char [ incomingData->get_packet_size()];
+                        if(recv(accessUDTP->_listenSocket, incomingDataTemp, incomingData->get_packet_size(), MSG_WAITALL) == -1)
                         {
                             perror("recv error");
                         }
-                        std::cout << "recv'd " << blah << "bytes." << std::endl;
+                        incomingData->set_raw_buffer(incomingDataTemp);
+
                         ((UDTPHandshake*)incomingData)->set_udtpsetup(accessUDTP->get_udtpsetup());
                         if(incomingData->process(accessUDTP))
                             accessUDTP->send_listen_data(incomingData);
@@ -391,6 +397,7 @@ void UDTP::send_flow_data(UDTPFlowThreadData* threadFlowData, UDTPPacket& packet
 }
 void UDTP::display_msg(std::string message)
 {
+
     if(_myUDTP.get_debug_enabled()) std::cout << message << std::endl;
 }
 void* UDTP::flowThreadsFunc(void* args)

@@ -8,11 +8,15 @@ UDTPSetup userSetup(){ /*Creates a UDTPSetup for the user*/
 
         UDTPSetup returnSetup;
 
+
         std::cout << "Please enter an action: " << std::endl;
         std::cout << "1 - Host a server" << std::endl;
         std::cout << "2 - Connect to a server" << std::endl;
         std::string command;
         std::cin >> command;
+        if(command=="devs") {
+            desiredSocketType = HOST;
+        }
         if(command == "1") desiredSocketType = HOST;
         if(command == "2") desiredSocketType = PEER;
 

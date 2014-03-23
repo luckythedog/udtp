@@ -11,18 +11,13 @@
 #include <iostream>
 
 /*These are DEFAULT settings for UDTP*/
-#define UDTP_VERSION_NUMBER 0x0001
-
-#define UDTP_DEBUG_ENABLED true /*set this for debugging messages*/
-
-#define DEFAULT_CHUNK_SIZE_AGREEMENT 420
-#define DEFAULT_MAX_CHUNK_SIZE 1024
-#define DEFAULT_MIN_CHUNK_SIZE 256
-#define DEFAULT_ENCRYPT_AUTOMATICALLY false
-
-#define DEFAULT_MAX_NUMBER_OF_FLOW_SOCKETS 5 /*Number of flow sockets opened per connection*/
-
-#define DEFAULT_MAX_CONNECTIONS 5
+static const  unsigned short UDTP_VERSION_NUMBER = 0x0001;
+static const bool UDTP_DEBUG_ENABLED = true;
+static const unsigned short DEFAULT_CHUNK_SIZE_AGREEMENT = 420;
+static const unsigned short DEFAULT_MAX_CHUNK_SIZE = 1024;
+static const unsigned short DEFAULT_MIN_CHUNK_SIZE = 256;
+static const unsigned short DEFAULT_MAX_NUMBER_OF_FLOW_SOCKETS = 5;
+static const unsigned short DEFAULT_MAX_CONNECTIONS = 5;
 
 struct UDTPSettings{
     /*Sets all defaults! These are used for global use. They can be edited with UDTPSetup.*/
@@ -41,19 +36,19 @@ struct UDTPSettings{
 
 class UDTPSetup{
     public:
-    UDTPSetup(){ };
+    UDTPSetup(){ set_defaults(); };
         /*This creates a client UDTPSetup*/
         UDTPSetup(std::string ip, unsigned int port) {
             _ip = ip.c_str();
             _port = port;
             _currentPort = port;
-            setDefaults();
+            set_defaults();
         }
         /*This creates a server UDTPSetup, since servers really only need ports to start up*/
         UDTPSetup(unsigned int port){
             _port = port;
             _currentPort = port;
-            setDefaults();
+            set_defaults();
         }
 
         const char* get_ip(){ return _ip.c_str(); };
@@ -99,9 +94,9 @@ class UDTPSetup{
                     return nextAvailablePort;
             };
 
-        void setDefaults(){
+        void set_defaults(){
             _settings.VERSION_NUMBER = UDTP_VERSION_NUMBER;
-
+            _settings.DEBUG_ENABLED = UDTP_DEBUG_ENABLED;
             _settings.ROOT_DIRECTORY = ""; /*Blank means it's just going to be where the exe is*/
 
             _settings.CHUNK_SIZE_AGREEMENT = DEFAULT_CHUNK_SIZE_AGREEMENT; /*So everyone can access it. It's on default setting*/
