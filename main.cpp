@@ -119,8 +119,12 @@ int main()
         if(returnUDTP != 0) return 666;
             std::cout << "SUCCESS: Session has began successfully." << std::endl;
         while(MyUDTP.alive()){
+
+            std::cout << "1 - Send a file" << std::endl;
+            std::cout << "2 - Get a file" << std::endl;
             std::string command;
             std::cin >> command;
+
             /*This is where peers or hosts can send files, stop server, or anything else!*/
         }
 

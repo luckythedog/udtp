@@ -6,7 +6,10 @@
 #define __UDTP_PACKET
 
 class UDTP;
-
+enum TransferType{
+    Push = 0x21,
+    Pull = 0x22
+};
 enum PacketType{
     Packet = 0x00,
     Handshake = 0x01,
@@ -19,11 +22,13 @@ enum PacketType{
 // TODO: Suggest renaming to PacketCode
 enum ResponseCode{
     /* Generic packet codes */
+    ResponseStart = 0xD9,
     ResponseNone = 0xF0,  /*Every response code starts out with none. Tihs means the request is unfulfilled.*/
     ResponseApproved = 0xF1,
     ResponseRejected = 0xF2,
     ResponseRetry = 0xF7, /*Just in case server is not ready to provide something, he will ask client to retry the packet again at a different time*/
     ResponseCriticalError = 0xF8, /*This will make the client FORCE quit the client with a error message.*/
+    ResponseConfirm = 0xD8, /*Another approval message! This is usually sent from the peer to the HOST*/
 
     /* TODO: move these to file packet code */
     ResponseFileNotFound = 0xF3,

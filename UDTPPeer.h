@@ -17,7 +17,8 @@ enum initProcessEvent{
     MUTEX_FRAMEWORK_INIT = 0x02,
     MUTEX_SELF_INIT = 0x03,
     QUEUE_THREADS = 0x04,
-    COMPLETE  = 0x05 /*Completion only verified by themselves*/
+    HANDSHAKE = 0x05,
+    COMPLETE  = 0x06 /*Completion only verified by themselves*/
 };
 
 class UDTPPeer{ /*The way we can identify different UDP ports is that, we can identify that they have the same TCP socket. the TCP socket never changes!*/

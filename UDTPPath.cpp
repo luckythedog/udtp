@@ -9,14 +9,6 @@ UDTPPath::UDTPPath()
 
 }
 
-char* UDTPPath::get_filename()
-{
-    return NULL;
-}
-char* UDTPPath::get_directory(){
-    return NULL;
-}
-
 
 bool UDTPPath::pack()
 {

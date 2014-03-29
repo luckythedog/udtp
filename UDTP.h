@@ -63,12 +63,11 @@ enum SocketReturn
 };
 enum TransferReturn
 {
-    TRANSFER_APPROVED,
-    TRANSFER_REJECTED,
-    FILE_ALREADY_EXIST_LOCAL,
-    FILE_ALREADY_EXIST_REMOTE,
-    FILE_NOT_EXIST_LOCAL,
-    FILE_NOT_EXIST_REMOTE
+    SENDING_HEADER,
+    FILE_ALREADY_EXIST,
+    FILE_NOT_EXIST,
+    SELF_NOT_READY
+
 };
 class UDTP
 {
@@ -100,10 +99,13 @@ public:
     SocketType get_socket_type();
     bool alive();
 
-    TransferReturn send_file(UDTPPath addressPath);
-    TransferReturn get_file(UDTPPath addressPath);
+    TransferReturn send_file(std::string path);
+    TransferReturn get_file(std::string path);
     UDTPFile* get_file_by_id(unsigned int fileID);
 
+    bool add_file_to_active(UDTPFile* file);
+    bool add_file_to_pending(UDTPFile* file);
+    bool approve_pending_file(UDTPHeader* compare); /*Approves a pending file and gives it a new ID from HOST*/
     static void* listenThread(void *args);
     static void* flowThread(void*);
     static void* processThread(void*);
@@ -126,7 +128,7 @@ public:
         return _fileIDCount;
     }
 
-    UDTPSetup* get_udtpsetup() {
+    UDTPSetup* get_setup() {
         return &_myUDTP;
     }
 
@@ -140,7 +142,8 @@ private:
     /*Mutexes*/
     pthread_mutex_t _mutexFlowThread;
     pthread_mutex_t _mutexPeer;
-    pthread_mutex_t _mutexFile;
+    pthread_mutex_t _mutexActiveFiles;
+    pthread_mutex_t _mutexPendingFiles;
     sem_t _semListenPacketQueue;
     sem_t _semFlowPacketQueue;
 
@@ -158,6 +161,7 @@ private:
     std::queue<UDTPPacket*> _listenPacketQueue;
     std::queue<UDTPChunk*> _flowPacketQueue;
     std::vector<UDTPFile*> _activeFiles;
+    std::vector<UDTPFile*> _pendingFiles;
     /*Current file count*/
     unsigned int _flowThreadCount;
     unsigned int _fileIDCount;

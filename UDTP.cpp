@@ -45,7 +45,7 @@ bool UDTP::start_listen_socket(SocketType bindType)
     if(_listenSocket < 0) return false;
     struct sockaddr_in listenAddress; /*TCP Struct address!*/
     memset(&listenAddress, 0, sizeof(listenAddress));
-    listenAddress.sin_port = htons(_myUDTP.get_port());
+    listenAddress.sin_port = htons(get_setup()->get_port());
     listenAddress.sin_family = AF_INET;
 
     switch (bindType)
@@ -56,7 +56,7 @@ bool UDTP::start_listen_socket(SocketType bindType)
         if(listen(_listenSocket,0) < 0) return false;
         break;
     case PEER:
-        listenAddress.sin_addr.s_addr = inet_addr(_myUDTP.get_ip());
+        listenAddress.sin_addr.s_addr = inet_addr(get_setup()->get_ip());
         if(connect(_listenSocket, (struct sockaddr*)&listenAddress, sizeof(struct sockaddr_in)) < 0) return false;
         break;
     }
@@ -102,7 +102,8 @@ bool UDTP::start_mutex()
     display_msg("Mutex have been started");
     if (pthread_mutex_init(&_mutexFlowThread, NULL) != 0) return false;
     if (pthread_mutex_init(&_mutexPeer, NULL) != 0) return false;
-    if(pthread_mutex_init(&_mutexFile, NULL) != 0) return false;
+    if(pthread_mutex_init(&_mutexActiveFiles, NULL) != 0) return false;
+        if(pthread_mutex_init(&_mutexPendingFiles, NULL) != 0) return false;
     if(sem_init(&_semListenPacketQueue,0,0) != 0) return false;
     if(sem_init(&_semFlowPacketQueue,0,0)  != 0) return false;
     self_peer()->set_init_process_complete(MUTEX_FRAMEWORK_INIT);
@@ -193,19 +194,27 @@ bool UDTP::remove_peer(unsigned int posID)
 }
 UDTPFile* UDTP::get_file_by_id(unsigned int fileID)
 {
-    pthread_mutex_lock(&_mutexFile);
+    pthread_mutex_lock(&_mutexActiveFiles);
     for(unsigned int i=0; i<_activeFiles.size(); i++)
     {
         if(_activeFiles[i]->get_file_id() == fileID)
         {
-            pthread_mutex_unlock(&_mutexFile);
+            pthread_mutex_unlock(&_mutexActiveFiles);
             return _activeFiles[i];
         }
     }
-    pthread_mutex_unlock(&_mutexFile);
+    pthread_mutex_unlock(&_mutexActiveFiles);
     return NULL;
 
 }
+    bool UDTP::add_file_to_active(UDTPFile* file){
+        _activeFiles.push_back(file);
+    }
+    bool UDTP::add_file_to_pending(UDTPFile* file){
+        _pendingFiles.push_back(file);
+    }
+  bool UDTP::approve_pending_file(UDTPHeader* compare){
+  }
 void UDTP::add_queue_listen(UDTPPacket* packet){
     display_msg("Packet was added to request queue!");
     _listenPacketQueue.push(packet);
@@ -271,7 +280,7 @@ void* UDTP::listenThread(void* args)
                     unsigned int newPeerID = accessUDTP->add_peer(newPeerListenSocket);
                     accessUDTP->get_peer(newPeerID)->set_address(newPeerAddress);
 
-                    UDTPHandshake handshakeStart(ResponseNone); /*Send this handshake request to client so he will start activate the function: send_required_packets();*/
+                    UDTPHandshake handshakeStart(ResponseStart); /*Send this handshake request to client so he will start activate the function: send_required_packets();*/
                     handshakeStart.set_socket_id(newPeerListenSocket); /*Take socket id! so the send_listen_data function will know where to send it to!*/
                     // TODO: Might want to refactor this code
                     accessUDTP->display_msg("HOST has sent out a HandshakeStart to notify new peer to use function");
@@ -437,7 +446,7 @@ void* UDTP::listenThread(void* args)
 void UDTP::display_msg(std::string message)
 {
 
-    if(_myUDTP.get_debug_enabled()) std::cout << message << std::endl;
+    if(get_setup()->get_debug_enabled()) std::cout << message << std::endl;
 }
 
 void* UDTP::flowQueueThread(void* args){ /*Open as many chunk queue threads as INCOMING flow threads*/
@@ -532,4 +541,40 @@ bool UDTP::alive()
 {
 
     return _isAlive;
+}
+
+TransferReturn UDTP::send_file(std::string path){
+    if(!self_peer()->check_init_process(COMPLETE)) return SELF_NOT_READY;
+    UDTPFile* sendFile = new UDTPFile(path);
+    if(!sendFile->check_file_exist()) return FILE_NOT_EXIST;
+    sendFile->retrieve_info_from_local_file();
+
+    if(get_socket_type() == HOST) sendFile->set_file_id(get_next_file_id());
+    if(get_socket_type() == PEER) sendFile->set_file_id(0); /*PEERS always send a zero!*/
+
+    UDTPHeader* requestFileSend = new UDTPHeader;
+    sendFile->pack_to_header(*requestFileSend); /*Packs it in!*/
+
+
+    requestFileSend->pack();
+    send_listen_data(requestFileSend);
+    delete requestFileSend;
+}
+
+TransferReturn UDTP::get_file(std::string path){
+    if(!self_peer()->check_init_process(COMPLETE)) return SELF_NOT_READY;
+    UDTPFile* getFile  = new UDTPFile(path);
+    if(getFile->check_file_exist()) return FILE_ALREADY_EXIST;
+    getFile->set_info_to_zero();
+
+    if(get_socket_type() == HOST) getFile->set_file_id(get_next_file_id());
+    if(get_socket_type() == PEER) getFile->set_file_id(0); /*PEERS always send a zero!*/
+
+    UDTPHeader* requestFileGet = new UDTPHeader;
+    getFile->pack_to_header(*requestFileGet); /*Packs it in!*/
+
+
+    requestFileGet->pack();
+    send_listen_data(requestFileGet);
+    delete requestFileGet;
 }

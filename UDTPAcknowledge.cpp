@@ -20,5 +20,14 @@ bool UDTPAcknowledge::unpack()
 
 bool UDTPAcknowledge::respond()
 {
+    switch(get_acknowledge_type()){
+        case AcknowledgeMissing:
+            if(get_response_code() == ResponseNone){ /*Someone remotely is complaining about a chunk*/
+
+            }
+        break;
+        case AcknowledgeComplete:
+        break;
+    }
     return true;
 }

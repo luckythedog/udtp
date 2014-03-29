@@ -18,7 +18,7 @@ class UDTPHandshake : public UDTPPacket{
             //if(_peerSetup != 0) delete _peerSetup;
         }
 
-        bool confirmHandshake();
+        bool compare_settings();
 
         /* must impliment pure virtual functions */
         char* get_raw_buffer();

@@ -29,9 +29,6 @@ class UDTPPath : public UDTPPacket{
         const char* get_address_path() { return _addressPath.c_str();};
         const char* get_return_path() { return _returnPath.c_str();};
 
-        char* get_filename();/*Dissects filename from addressPath then returns it here, if none it will return empty*/
-        char* get_directory(); /*Dissects directory from addressPath then returns it here, if none it will return empty*/
-
         /* must impliment pure virtual functions */
         bool pack();
         bool unpack();

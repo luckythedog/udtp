@@ -3,7 +3,9 @@
 class UDTPData;
 enum AcknowledgeType{
     AcknowledgeMissing = 0xA0, /*This is a missing chunk request*/
-    AcknowledgeComplete = 0xA1 /*This notifies the other person (usually the puller) that they are complete. If it is responded with a
+    AcknowledgePlusFlowSocket = 0xA1, /*Request to add a flow socket*/
+    AcknowledgeMinusFlowSocket = 0xA2, /*Get rid of a flow socket*/
+    AcknowledgeComplete = 0xA3 /*This notifies the other person (usually the puller) that they are complete. If it is responded with a
                                                     ResponseApproved -- that means both parties can close the files without worry. If one party
                                                     is sending a ResponseRejected, the other party will send an AcknowledgeComplete after
                                                     every AcknowledgeMissing.*/
@@ -14,20 +16,11 @@ class UDTPAcknowledge : public UDTPPacket{
 
         UDTPAcknowledge(AcknowledgeType acknowledgeType, unsigned short fileID) {
             _header.packetType = Acknowledge;
-            _missingChunksCount  = 0;
             _fileID = fileID;
             _acknowledgeType = acknowledgeType;
            _responseCode = ResponseNone;
         };
 
-        bool add_missing_chunk(unsigned short chunkID) {
-            std::stringstream tempMissingChunkStream;
-            tempMissingChunkStream << _missingChunks << std::hex << chunkID; /*Each chunk is seperated by 2 bytes. So we know exactly where to cut!*/
-            _missingChunks = tempMissingChunkStream.str();
-            _missingChunksCount++;
-        };
-        const char* get_missing_chunks() { return _missingChunks.c_str();};
-        unsigned short get_missing_chunks_count() { return _missingChunksCount;};
 
         unsigned short get_file_id() { return _fileID; };
         bool set_file_id(unsigned short fileID) { _fileID = fileID;};
@@ -46,8 +39,7 @@ class UDTPAcknowledge : public UDTPPacket{
         bool unpack();
         bool respond();
     private:
-        unsigned short _missingChunksCount;
-        std::string _missingChunks;
+
         AcknowledgeType _acknowledgeType;
         ResponseCode _responseCode;
         unsigned short _fileID;
