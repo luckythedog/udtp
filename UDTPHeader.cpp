@@ -32,9 +32,11 @@ UDTPPath& UDTPHeader::get_path_of_file(){
     return *_pathOfFile;
 }
 
-char* UDTPHeader::get_raw_buffer(){
-}
 
-bool UDTPHeader::process(UDTP* myUDTP){
+bool UDTPHeader::pack(){
     return true;
+}
+bool UDTPHeader::unpack(){
+}
+bool UDTPHeader::respond(){
 }

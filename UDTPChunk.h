@@ -1,6 +1,7 @@
 #ifndef __UDTP_CHUNK
 #define __UDTP_CHUNK
-
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include "UDTPPacket.h"
 class UDTPData;
 class UDTPAcknowledge;
@@ -23,14 +24,22 @@ class UDTPChunk : public UDTPPacket{
         bool get_verified() { return _isVerified;};
         bool set_verified(bool isVerified) { _isVerified = isVerified;};
 
-
+        bool set_receiving_address(sockaddr_in receivingAddress){
+            _receivingAddress = receivingAddress;
+        }
+        sockaddr_in get_receiving_address(){
+            return (_receivingAddress);
+        }
 
         /* must impliment pure virtual functions */
         char* get_raw_buffer();
-        bool process(UDTP *myUDTP);
+        bool pack();
+        bool unpack();
+        bool respond();
 
 
     private:
+        sockaddr_in _receivingAddress;
         char* _chunkBuffer; /*This is the raw chunk*/
         unsigned short _fileID;
         unsigned short _chunkID;

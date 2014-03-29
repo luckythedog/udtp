@@ -36,7 +36,9 @@ class UDTPHeader : public UDTPPacket{
 
         /* must impliment pure virtual functions */
         char* get_raw_buffer();
-        bool process(UDTP *myUDTP);
+        bool pack();
+        bool unpack();
+        bool respond();
 
     private:
         UDTPPath* _pathOfFile;

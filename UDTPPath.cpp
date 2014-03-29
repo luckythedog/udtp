@@ -17,10 +17,15 @@ char* UDTPPath::get_directory(){
     return NULL;
 }
 
-char* UDTPPath::get_raw_buffer(){
-}
 
-bool UDTPPath::process(UDTP* myUDTP)
+bool UDTPPath::pack()
 {
     return true;
+}
+bool UDTPPath::unpack(){
+
+}
+
+bool UDTPPath::respond(){
+
 }

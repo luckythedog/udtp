@@ -1,25 +1,27 @@
 # depslib dependency file v1.0
-1394718556 source:/home/lucky/workspace/UDTP/main.cpp
+1395532274 source:/home/lucky/workspace/UDTP/main.cpp
 	<iostream>
 	<cstring>
 	<string>
 	"UDTP.h"
 
-1394718517 source:/home/lucky/workspace/UDTP/UDTP.cpp
+1396069974 source:/home/lucky/workspace/UDTP/UDTP.cpp
 	"UDTP.h"
 	"UDTPSetup.h"
 	"UDTPPacket.h"
-	"UDTPData.h"
 	"UDTPPath.h"
 	"UDTPFile.h"
 	"UDTPHeader.h"
 	"UDTPChunk.h"
 	"UDTPAcknowledge.h"
 	"UDTPHandshake.h"
-	"UDTPFlowThreadData.h"
 	"UDTPAddress.h"
 	"UDTPPeer.h"
+	"UDTPThreadFlow.h"
+	"UDTPThreadFile.h"
+	"UDTPThreadProcess.h"
 	<fstream>
+	<string.h>
 
 1391931464 source:/home/lucky/workspace/UDTP/UDTPData.cpp
 	"UDTPData.h"
@@ -31,7 +33,7 @@
 
 1391881549 source:/home/lucky/workspace/UDTP/UDTPSetup.cpp
 
-1393799713 /home/lucky/workspace/UDTP/UDTP.h
+1396069456 /home/lucky/workspace/UDTP/UDTP.h
 	<vector>
 	<cstring>
 	<queue>
@@ -43,31 +45,32 @@
 	<semaphore.h>
 	<netinet/in.h>
 	<arpa/inet.h>
+	<asm/socket.h>
+	<unistd.h>
 	<winsocks.h>
 	<windows.h>
-	"UDTPSettings.h"
 	"UDTPSetup.h"
+	"UDTPPacket.h"
+	"UDTPThread.h"
 
 1393622901 /home/lucky/workspace/UDTP/UDTPData.h
 	<iostream>
 	"UDTPPacket.h"
 	<cstring>
 
-1394717161 /home/lucky/workspace/UDTP/UDTPSetup.h
+1395530794 /home/lucky/workspace/UDTP/UDTPSetup.h
 	<string>
 	<queue>
 	<iostream>
-	"UDTPSettings.h"
 
 1391913718 /home/lucky/workspace/UDTP/UDTPConfig.h
 
-1393798198 /home/lucky/workspace/UDTP/UDTPPacket.h
+1396067159 /home/lucky/workspace/UDTP/UDTPPacket.h
 
-1391992093 source:/home/lucky/workspace/UDTP/UDTPPath.cpp
+1396062827 source:/home/lucky/workspace/UDTP/UDTPPath.cpp
 	"UDTPPath.h"
-	"UDTPData.h"
 
-1391992100 /home/lucky/workspace/UDTP/UDTPPath.h
+1396062660 /home/lucky/workspace/UDTP/UDTPPath.h
 	<string>
 	<iostream>
 	"UDTPPacket.h"
@@ -77,38 +80,40 @@
 	"UDTPData.h"
 	"UDTPPath.h"
 
-1393629629 source:/home/lucky/workspace/UDTP/UDTPHeader.cpp
+1396062812 source:/home/lucky/workspace/UDTP/UDTPHeader.cpp
 	"UDTPHeader.h"
-	"UDTPData.h"
 	"UDTPFile.h"
 	"UDTPPath.h"
 
-1393629561 /home/lucky/workspace/UDTP/UDTPHeader.h
+1396062761 /home/lucky/workspace/UDTP/UDTPHeader.h
 	"UDTPPacket.h"
 
-1393629629 /home/lucky/workspace/UDTP/UDTPChunk.h
+1396062680 /home/lucky/workspace/UDTP/UDTPChunk.h
+	<netinet/in.h>
+	<arpa/inet.h>
 	"UDTPPacket.h"
 
 1391914667 /home/lucky/workspace/UDTP/UDTPWhine.h
 	"UDTPPacket.h"
 
-1393629593 source:/home/lucky/workspace/UDTP/UDTPFile.cpp
+1396070259 source:/home/lucky/workspace/UDTP/UDTPFile.cpp
 	"UDTPFile.h"
 	"UDTPHeader.h"
-	"UDTPSettings.h"
+	"UDTPSetup.h"
 
-1393629629 /home/lucky/workspace/UDTP/UDTPFile.h
+1396070607 /home/lucky/workspace/UDTP/UDTPFile.h
 	<queue>
 	<vector>
 	<fstream>
 	<ctime>
+	"UDTPPeer.h"
 	"UDTPChunk.h"
 	"UDTPPath.h"
+	"UDTPThreadFile.h"
 
-1391932560 source:/home/lucky/workspace/UDTP/UDTPChunk.cpp
+1396063010 source:/home/lucky/workspace/UDTP/UDTPChunk.cpp
 	"UDTPChunk.h"
 	"UDTPAcknowledge.h"
-	"UDTPData.h"
 
 1394516740 /home/lucky/workspace/UDTP/UDTPSettings.h
 	<climits>
@@ -120,31 +125,33 @@
 	"UDTPWhine.h"
 	"UDTPData.h"
 
-1393738708 source:/home/lucky/workspace/UDTP/UDTPHandshake.cpp
+1396063876 source:/home/lucky/workspace/UDTP/UDTPHandshake.cpp
 	"UDTPHandshake.h"
-	"UDTPData.h"
+	"UDTPSetup.h"
+	"UDTPPeer.h"
+	"UDTP.h"
+	<string.h>
 
-1394517314 /home/lucky/workspace/UDTP/UDTPHandshake.h
+1396064081 /home/lucky/workspace/UDTP/UDTPHandshake.h
 	<stdint.h>
 	<vector>
 	"UDTPPacket.h"
 
-1393631480 /home/lucky/workspace/UDTP/UDTPAcknowledge.h
+1396062697 /home/lucky/workspace/UDTP/UDTPAcknowledge.h
 	"UDTPPacket.h"
 	<sstream>
 
-1391931464 source:/home/lucky/workspace/UDTP/UDTPAcknowledge.cpp
+1396063002 source:/home/lucky/workspace/UDTP/UDTPAcknowledge.cpp
 	"UDTPAcknowledge.h"
-	"UDTPData.h"
 
-1393797477 /home/lucky/workspace/UDTP/UDTPFlowThreadData.h
+1395529719 /home/lucky/workspace/UDTP/UDTPFlowThreadData.h
 	<queue>
 	<pthread.h>
 	<sys/socket.h>
 	<netinet/in.h>
 	<arpa/inet.h>
 
-1393753710 source:/home/lucky/workspace/UDTP/UDTPFlowThreadData.cpp
+1395529719 source:/home/lucky/workspace/UDTP/UDTPFlowThreadData.cpp
 	"UDTPFlowThreadData.h"
 	"UDTPChunk.h"
 	"UDTPAddress.h"
@@ -154,7 +161,7 @@
 
 1393576882 source:/home/lucky/workspace/UDTP/UDTPListenSocket.cpp
 
-1393738708 /home/lucky/workspace/UDTP/UDTPAddress.h
+1395529719 /home/lucky/workspace/UDTP/UDTPAddress.h
 	<sys/socket.h>
 	<netinet/in.h>
 	<arpa/inet.h>
@@ -168,16 +175,18 @@
 	"UDTPSocket.h"
 	"UDTPAddress.h"
 
-1393797726 /home/lucky/workspace/UDTP/UDTPPeer.h
+1396069300 /home/lucky/workspace/UDTP/UDTPPeer.h
 	<vector>
+	<queue>
 	<sys/socket.h>
 	<netinet/in.h>
 	<arpa/inet.h>
+	<pthread.h>
+	<semaphore.h>
 
-1393797750 source:/home/lucky/workspace/UDTP/UDTPPeer.cpp
+1396046990 source:/home/lucky/workspace/UDTP/UDTPPeer.cpp
 	"UDTPPeer.h"
 	"UDTPAddress.h"
-	"UDTPFlowThreadData.h"
 
 1395458001 source:/home/justin/Projects/udtp/main.cpp
 	<iostream>
@@ -327,4 +336,35 @@
 	"UDTPPeer.h"
 	"UDTPAddress.h"
 	"UDTPFlowThreadData.h"
+
+1396042766 source:/home/lucky/workspace/UDTP/UDTPThread.cpp
+
+1396069961 /home/lucky/workspace/UDTP/UDTPThread.h
+	<pthread.h>
+
+1396050607 /home/lucky/workspace/UDTP/UDTPThreadSocket.h
+	<sys/socket.h>
+	<netinet/in.h>
+	<arpa/inet.h>
+	"UDTPThread.h"
+
+1396070539 /home/lucky/workspace/UDTP/UDTPThreadFile.h
+	<fstream>
+	<netinet/in.h>
+	<arpa/inet.h>
+	"UDTPThread.h"
+
+1396069944 /home/lucky/workspace/UDTP/UDTPThreadProcess.h
+	<fstream>
+	<netinet/in.h>
+	<arpa/inet.h>
+	"UDTPChunk.h"
+	<queue>
+	"UDTPThread.h"
+
+1396069925 /home/lucky/workspace/UDTP/UDTPThreadFlow.h
+	<sys/socket.h>
+	<netinet/in.h>
+	<arpa/inet.h>
+	"UDTPThread.h"
 

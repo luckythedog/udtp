@@ -33,8 +33,9 @@ class UDTPPath : public UDTPPacket{
         char* get_directory(); /*Dissects directory from addressPath then returns it here, if none it will return empty*/
 
         /* must impliment pure virtual functions */
-        char* get_raw_buffer();
-        bool process(UDTP* myUDTP);
+        bool pack();
+        bool unpack();
+        bool respond();
 
     private:
         std::string _addressPath;

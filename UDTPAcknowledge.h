@@ -42,7 +42,9 @@ class UDTPAcknowledge : public UDTPPacket{
 
         /* must impliment pure virtual functions */
         char* get_raw_buffer();
-        bool process(UDTP *myUDTP);
+        bool pack();
+        bool unpack();
+        bool respond();
     private:
         unsigned short _missingChunksCount;
         std::string _missingChunks;

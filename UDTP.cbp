@@ -44,8 +44,6 @@
 		<Unit filename="UDTPChunk.h" />
 		<Unit filename="UDTPFile.cpp" />
 		<Unit filename="UDTPFile.h" />
-		<Unit filename="UDTPFlowThreadData.cpp" />
-		<Unit filename="UDTPFlowThreadData.h" />
 		<Unit filename="UDTPHandshake.cpp" />
 		<Unit filename="UDTPHandshake.h" />
 		<Unit filename="UDTPHeader.cpp" />
@@ -56,6 +54,12 @@
 		<Unit filename="UDTPPeer.cpp" />
 		<Unit filename="UDTPPeer.h" />
 		<Unit filename="UDTPSetup.h" />
+		<Unit filename="UDTPThread.cpp" />
+		<Unit filename="UDTPThread.h" />
+		<Unit filename="UDTPThreadFile.h" />
+		<Unit filename="UDTPThreadFlow.h" />
+		<Unit filename="UDTPThreadProcess.h" />
+		<Unit filename="UDTPThreadSocket.h" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<code_completion />

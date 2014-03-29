@@ -35,11 +35,6 @@ enum ResponseCode{
     ResponseInvalidPath = 0xF6,
 
 
-    /* TODO: move this to handshake packet code */
-    HandshakeInitiation = 0x50,
-    HandshakeResponse = 0x51,
-    HandshakeConfirmation = 0x52,
-
 };
 
 struct UDTPPacketHeader {
@@ -62,20 +57,29 @@ class UDTPPacket{
         unsigned int get_peer_id() { return _peerID;};
         bool set_peer_id(unsigned int peerID) { _peerID = peerID;};
 
+
+        UDTP* udtp() { return _myUDTP;};
+        bool set_udtp(UDTP* myUDTP){
+            _myUDTP = myUDTP;
+            return true;
+        }
+
         /* JH - Integrated UDTPData into generic packet structure. */
         unsigned short get_packet_size() { return _header.packetSize;};
         virtual bool set_raw_buffer(char* raw){ _raw = raw; };
         virtual char& write_to_buffer() {return  *_raw;};
 
         /* JH - Pure virtual function that derived packets must impliment */
-        virtual char* get_raw_buffer() = 0; /*Retrieves transferable character buffer*/
-        virtual bool process(UDTP* myUDTP) = 0;
+        char* get_raw_buffer() { return _raw;};
+        virtual bool pack() = 0; /*Modifies _raw*/
+        virtual bool unpack() = 0; /*Modifies _raw*/
+        virtual bool respond() = 0; /*Modifies the variables taken from the values of _raw*/
 
     protected:
         /*These can be transmitted*/
         UDTPPacketHeader _header;
         ResponseCode _responseCode; /*Not every packet uses a response code, like Chunk or Whine -- since those do not need a response.*/
-
+        UDTP* _myUDTP;
         /*Local variables! They will NOT transmit through the network!*/
         unsigned int _peerID; /*It's numerical location in the peer's list*/
         unsigned int _socketID; /*Optional holder*/ /*Since indexes and sockets are different entirely on each system! These are local!*/
