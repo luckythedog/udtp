@@ -59,7 +59,6 @@
 		<Unit filename="UDTPThreadFile.h" />
 		<Unit filename="UDTPThreadFlow.h" />
 		<Unit filename="UDTPThreadProcess.h" />
-		<Unit filename="UDTPThreadSocket.h" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<code_completion />
