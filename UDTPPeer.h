@@ -45,6 +45,13 @@ class UDTPPeer{ /*The way we can identify different UDP ports is that, we can id
         if(!(_initProcess & (0x01<<eventCompleted))) return false; /*Has not been completed*/
         return true;
     };
+    bool set_unique_id(unsigned int newID){
+        _uniqueID = newID;
+    }
+    unsigned int get_unique_id(){
+        return _uniqueID;
+    }
+
     bool set_online(){ _connectionStatus = true;};
     bool set_offline(){ _connectionStatus = false;};
     bool is_online(){ return _connectionStatus;};
@@ -74,6 +81,7 @@ class UDTPPeer{ /*The way we can identify different UDP ports is that, we can id
     unsigned char _initProcess; /*Holds 8 booleans for the startup process*/
     unsigned int _listenSocket;
     unsigned short _chunkSize;
+    unsigned int _uniqueID; /*To detect disconnects*/
     bool _connectionStatus;
     sockaddr_in _address;
     pthread_mutex_t _mutexFlowThreads;

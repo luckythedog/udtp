@@ -165,7 +165,7 @@ private:
     /*Current file count*/
     unsigned int _flowThreadCount;
     unsigned int _fileIDCount;
-
+    unsigned int _uniqueIDCount;
 
 };
 

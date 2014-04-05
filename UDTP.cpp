@@ -19,6 +19,7 @@
 
 SocketReturn UDTP::start(SocketType socketType)
 {
+    _uniqueIDCount = 0;
     _flowThreadCount = 0;
     if(_isAlive) return ALREADY_RUNNING;
     _socketType = socketType;
@@ -41,12 +42,13 @@ SocketReturn UDTP::start(SocketType socketType)
 }
 bool UDTP::start_listen_socket(SocketType bindType)
 {
-    _listenSocket = socket(AF_INET, SOCK_STREAM, 0); /*TCP Socket!*/
+    _listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); /*TCP Socket!*/
     if(_listenSocket < 0) return false;
     struct sockaddr_in listenAddress; /*TCP Struct address!*/
     memset(&listenAddress, 0, sizeof(listenAddress));
     listenAddress.sin_port = htons(get_setup()->get_port());
     listenAddress.sin_family = AF_INET;
+
 
     switch (bindType)
     {
@@ -61,6 +63,12 @@ bool UDTP::start_listen_socket(SocketType bindType)
         break;
     }
 
+        unsigned int optval = 1;
+        socklen_t optlen = sizeof(optval);
+        if(setsockopt(_listenSocket, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen) < 0){
+            perror("setsockopt on HOST");
+            return SOCKET_NOT_INIT;
+        }
     return true;
 }
 bool UDTP::add_flow_thread(ThreadType threadType, unsigned int peerID)
@@ -121,6 +129,12 @@ bool UDTP::send_listen_data(UDTPPacket* packet)
 {
     if(get_socket_type() == PEER) display_msg("PEER has sent out data using send_listen_data()");
     if(get_socket_type() == HOST) display_msg("HOST has sent out data using send_listen_data()");
+    if(packet->get_response_code() != ResponseNone){ /*If it is not ResponseNone, it will need to undergo a unique_id check! That is fine since unique_id is applied automatically from read()*/
+    if(get_peer(packet->get_peer_id())->get_unique_id() != packet->get_unique_id() ) {
+        display_msg("PACKET WILL NOT SEND: Packet's unique ID does not match with PEER's unique ID. This PEER may have disconnected (and removed from polling and peer list) and this packet was assigned that PEER's last position.");
+        return false;
+    }
+    }
     send(packet->get_socket_id(), packet->get_raw_buffer(), packet->get_packet_size(), 0); /*The UDTPPAclet's socket id is used to denote where to send the packet. The socket id is handled in the polling threads. For HOSTS, the socket id
                                                                                                                     will be the receiving socket's file descriptor. For PEER, it will always be its own _listenSocket being that that is where the central receiving and sending
                                                                                                                     happens.*/
@@ -278,13 +292,19 @@ void* UDTP::listenThread(void* args)
                     activeListenSockets.push_back(newPollFd);
                     /*Add to peers list. Both Pollfd and _listPeer are Parallel..*/
                     unsigned int newPeerID = accessUDTP->add_peer(newPeerListenSocket);
+
                     accessUDTP->get_peer(newPeerID)->set_address(newPeerAddress);
+                    accessUDTP->get_peer(newPeerID)->set_unique_id(accessUDTP->_uniqueIDCount);
+                    accessUDTP->_uniqueIDCount++;
 
                     UDTPHandshake handshakeStart(ResponseStart); /*Send this handshake request to client so he will start activate the function: send_required_packets();*/
                     handshakeStart.set_socket_id(newPeerListenSocket); /*Take socket id! so the send_listen_data function will know where to send it to!*/
+                    handshakeStart.set_peer_id(newPeerID);
                     // TODO: Might want to refactor this code
                     accessUDTP->display_msg("HOST has sent out a HandshakeStart to notify new peer to use function");
                     accessUDTP->send_listen_data(&handshakeStart); /*Send out Handshake start so the client knows to start the function send_required_packets()*/
+
+
                 }
             }
             for(unsigned int i=1; i<activeListenSockets.size(); i++)
@@ -292,8 +312,9 @@ void* UDTP::listenThread(void* args)
                 if(activeListenSockets[i].revents & POLLIN)
                 {
                     UDTPPacketHeader packetDeduction;
-                    if((recv(accessUDTP->_listenSocket, &packetDeduction, sizeof(UDTPPacketHeader), 0)) != 0)
+                    if((read(activeListenSockets[i].fd, &packetDeduction, sizeof(UDTPPacketHeader))) != 0)
                     {
+                        if(accessUDTP->get_peer(i)->is_online()){
                         accessUDTP->display_msg("HOST has received incoming packet");
                         UDTPPacket *incomingData = 0;
 
@@ -328,6 +349,7 @@ void* UDTP::listenThread(void* args)
                         if(deductionValid){
                             incomingData->set_socket_id(activeListenSockets[i].fd);
                             incomingData->set_peer_id(i);
+                            incomingData->set_unique_id(accessUDTP->get_peer(i)->get_unique_id()); /*Set unique ID!*/
                             incomingData->set_udtp(accessUDTP); /*Pass on UDTP pointer*/
                             recv(accessUDTP->_listenSocket, (char*)incomingData->write_to_buffer(), incomingData->get_packet_size(), 0);
                             /*Verifying sending check!*/
@@ -343,12 +365,13 @@ void* UDTP::listenThread(void* args)
                             //sem_post(&accessUDTP->_semListenPacketQueue);
                         }
                         accessUDTP->display_msg("HOST has completed packet processing");
-
+                        }
                     }
                     else
                     {
                         /*Client has disconnected*/
-                        accessUDTP->_listPeers[i]->set_offline();
+                        accessUDTP->get_peer(i)->set_offline();
+                        accessUDTP->display_msg("HOST has detected PEER disconnect and queue them up to be removed.");
                         removePeerAndSocketSafely.push(i);
                     }
                 }
@@ -356,7 +379,7 @@ void* UDTP::listenThread(void* args)
             while(!removePeerAndSocketSafely.empty())
             {
                 unsigned int posID = removePeerAndSocketSafely.front(); /*Get pos Id, this is just a locational id in the parallel array..*/
-
+                accessUDTP->display_msg("HOST has removed a PEER from polling and list of peers");
                 activeListenSockets.erase(activeListenSockets.begin()+posID); /*Remove from polling(*/
                 accessUDTP->remove_peer(posID);
                 removePeerAndSocketSafely.pop();
@@ -375,7 +398,7 @@ void* UDTP::listenThread(void* args)
             if((activeListenSockets[0].revents & POLLIN))
             {
                            UDTPPacketHeader packetDeduction;
-                    if((recv(accessUDTP->_listenSocket, &packetDeduction, sizeof(UDTPPacketHeader), 0)) != 0)
+                    if((read(accessUDTP->_listenSocket, &packetDeduction, sizeof(UDTPPacketHeader))) != 0)
                     {
                         accessUDTP->display_msg("PEER has received incoming packet");
                         UDTPPacket *incomingData = 0;
@@ -411,6 +434,7 @@ void* UDTP::listenThread(void* args)
                         if(deductionValid){
                             incomingData->set_socket_id(activeListenSockets[0].fd);
                             incomingData->set_peer_id(0);
+                            incomingData->set_unique_id(accessUDTP->get_peer(0)->get_unique_id()); /*Set unique ID!*/
                             incomingData->set_udtp(accessUDTP); /*Pass on UDTP pointer*/
                             recv(accessUDTP->_listenSocket, (char*)incomingData->write_to_buffer(), incomingData->get_packet_size(), 0);
                             /*Verifying sending check!*/

@@ -6,6 +6,7 @@
 #define __UDTP_PACKET
 
 class UDTP;
+
 enum TransferType{
     Push = 0x21,
     Pull = 0x22
@@ -61,6 +62,13 @@ class UDTPPacket{
 
         unsigned int get_peer_id() { return _peerID;};
         bool set_peer_id(unsigned int peerID) { _peerID = peerID;};
+        bool set_unique_id(unsigned int newID){
+            _uniqueID = newID;
+        }
+        unsigned int get_unique_id(){
+            return _uniqueID;
+        }
+
 
 
         UDTP* udtp() { return _myUDTP;};
@@ -87,7 +95,9 @@ class UDTPPacket{
         UDTP* _myUDTP;
         /*Local variables! They will NOT transmit through the network!*/
         unsigned int _peerID; /*It's numerical location in the peer's list*/
+        unsigned int _uniqueID;
         unsigned int _socketID; /*Optional holder*/ /*Since indexes and sockets are different entirely on each system! These are local!*/
+
         char* _raw; /*This is the holder for raw data*/
 
 
