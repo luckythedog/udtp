@@ -302,6 +302,8 @@ void* UDTP::listenThread(void* args)
                     handshakeStart.set_peer_id(newPeerID);
                     // TODO: Might want to refactor this code
                     accessUDTP->display_msg("HOST has sent out a HandshakeStart to notify new peer to use function");
+
+                    handshakeStart.pack();
                     accessUDTP->send_listen_data(&handshakeStart); /*Send out Handshake start so the client knows to start the function send_required_packets()*/
 
 
