@@ -109,7 +109,7 @@ ThreadType get_thread_type();
         unsigned int _sizeOfFile;
         unsigned int _chunkSize;
         int memoryMapFD;
-        bool _approver = false; /*Were you the approver?*/
+        bool _approver; /*Were you the approver?*/
         bool _fileExists; /*Boolean for file existance. Depending on if the user used send or push, we will cancel
                                 immediately without sending a header if the file does not exist.*/
         TransferType _transferType;

@@ -28,11 +28,13 @@ SocketReturn UDTP::start(SocketType socketType)
     if (!start_listen_socket(socketType)) return SOCKET_NOT_INIT; /*starts a listen socket on bind type*/
     /*Flow socket setup!*/
     /*Important part*/
+    if(!start_mutex()) return COULD_NOT_START_MUTEX;
+
     socketType == HOST ? display_msg("HOST has successfully completed socket setup.") : display_msg("HOST has successfully completed socket setup.");
     unsigned int peerID = add_peer(_listenSocket); /*Add self as socket. Doesn't matter if you're server or client!*/
+    self_peer()->set_init_process_complete(MUTEX_FRAMEWORK_INIT);
     self_peer()->set_init_process_complete(LISTEN_SOCKET);
 
-    if(!start_mutex()) return COULD_NOT_START_MUTEX;
     if(!start_queue_threads()) return COULD_NOT_START_THREADS;
     if(!start_listen_thread()) return COULD_NOT_START_THREADS;
 
@@ -114,7 +116,6 @@ bool UDTP::start_mutex()
         if(pthread_mutex_init(&_mutexPendingFiles, NULL) != 0) return false;
     if(sem_init(&_semListenPacketQueue,0,0) != 0) return false;
     if(sem_init(&_semFlowPacketQueue,0,0)  != 0) return false;
-    self_peer()->set_init_process_complete(MUTEX_FRAMEWORK_INIT);
 
     return true;
 }
