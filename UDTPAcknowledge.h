@@ -1,11 +1,15 @@
 #include "UDTPPacket.h"
 #include <sstream>
 class UDTPData;
+class UDTP;
+class UDTPPeer;
 enum AcknowledgeType{
-    AcknowledgeMissing = 0xA0, /*This is a missing chunk request*/
-    AcknowledgePlusFlowSocket = 0xA1, /*Request to add a flow socket*/
-    AcknowledgeMinusFlowSocket = 0xA2, /*Get rid of a flow socket*/
-    AcknowledgeComplete = 0xA3 /*This notifies the other person (usually the puller) that they are complete. If it is responded with a
+    AcknowledgePacketCount = 0xA0, /*Kind of like Dota 2 when you type -ping you see packet loss. We will keep a local integer of UDP packets sent and compare it between host and peer*/
+    AcknowledgeMissing = 0xA1, /*This is a missing chunk request*/
+    AcknowledgeMissingSent = 0xA2, /*All missing are sent!*/
+    AcknowledgeAddThread = 0xA3, /*Request to add a flow socket*/
+    AcknowledgeRemoveThread = 0xA4, /*Get rid of a flow socket*/ /******THESE ARE USED TO ADD AND REMOVE BASED ON MISSING PACKETS COUNT*****/
+    AcknowledgeComplete = 0xA5 /*This notifies the other person (usually the puller) that they are complete. If it is responded with a
                                                     ResponseApproved -- that means both parties can close the files without worry. If one party
                                                     is sending a ResponseRejected, the other party will send an AcknowledgeComplete after
                                                     every AcknowledgeMissing.*/
@@ -32,16 +36,26 @@ class UDTPAcknowledge : public UDTPPacket{
         bool set_response_code(ResponseCode responseCode) { responseCode = _responseCode;};
 
         AcknowledgeType get_acknowledge_type() { return _acknowledgeType;};
+        bool set_packets_count(unsigned int packetsCount){
+            _packetsCount = packetsCount;
+        }
 
+        bool set_acknowledge_type(AcknowledgeType newType){
+            _acknowledgeType = newType;
+        }
+
+        unsigned int get_packets_count(){
+            return _packetsCount;
+        }
         /* must impliment pure virtual functions */
         char* get_raw_buffer();
         bool pack();
         bool unpack();
         bool respond();
     private:
-
         AcknowledgeType _acknowledgeType;
         ResponseCode _responseCode;
         unsigned short _fileID;
         unsigned short _chunkID;
+        unsigned int _packetsCount;
 };

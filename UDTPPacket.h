@@ -4,8 +4,9 @@
 *******************************************/
 #ifndef __UDTP_PACKET
 #define __UDTP_PACKET
-
+#include "UDTPPeer.h"
 class UDTP;
+class UDTPPeer;
 
 enum TransferType{
     Push = 0x21,
@@ -40,7 +41,6 @@ enum ResponseCode{
     ResponseListingFound= 0xF5,
     ResponseInvalidPath = 0xF6,
 
-
 };
 
 struct UDTPPacketHeader {
@@ -71,10 +71,23 @@ class UDTPPacket{
 
 
 
+
         UDTP* udtp() { return _myUDTP;};
         bool set_udtp(UDTP* myUDTP){
             _myUDTP = myUDTP;
             return true;
+        }
+        UDTPPeer* peer(){
+            return _myPeer;
+        }
+        bool set_peer(UDTPPeer* myPeer){
+            _myPeer = myPeer;
+            return true;
+        }
+
+
+        bool verify_unique_id(){
+            return  _myPeer->get_unique_id() == get_unique_id();
         }
 
         /* JH - Integrated UDTPData into generic packet structure. */
@@ -93,6 +106,7 @@ class UDTPPacket{
         UDTPPacketHeader _header;
         ResponseCode _responseCode; /*Not every packet uses a response code, like Chunk or Whine -- since those do not need a response.*/
         UDTP* _myUDTP;
+        UDTPPeer* _myPeer;
         /*Local variables! They will NOT transmit through the network!*/
         unsigned int _peerID; /*It's numerical location in the peer's list*/
         unsigned int _uniqueID;

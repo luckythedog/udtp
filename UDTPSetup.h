@@ -25,6 +25,11 @@ static const unsigned short DEFAULT_MAX_NUMBER_OF_FLOW_SOCKETS = 5; /*For HOST. 
 static const unsigned short DEFAULT_MAX_NUMBER_OF_FILE_THREADS = 5; /*For both. Number of file threads per file*/
 static const unsigned int DEFAULT_MAX_MEMORY_USAGE_PER_FILE = 5000; /*Zero means unlimited!*/
 
+static const unsigned int DEFAULT_CRITICAL_LOSS_PACKET_PERCENTAGE = 80;
+static const unsigned int DEFAULT_SATISFACTORY_LOSS_PACKET_PERCENTAGE = 95; /*This*/
+
+
+
 struct UDTPSettings{
     /*Sets all defaults! These are used for global use. They can be edited with UDTPSetup.*/
     // TODO: We need to find a way to make this const and allow peerSetup to still compare versions
@@ -42,6 +47,8 @@ struct UDTPSettings{
     unsigned short MAX_NUMBER_OF_FLOW_SOCKETS;
     unsigned short MAX_NUMBER_OF_FILE_THREADS;
     unsigned int MAX_MEMORY_USAGE_PER_FILE ;
+    unsigned int CRITICAL_LOSS_PACKET_PERCENTAGE;
+    unsigned int SATISFACTORY_LOSS_PACKET_PERCENTAGE;
 };
 
 class UDTPSetup{
@@ -102,6 +109,20 @@ class UDTPSetup{
             _settings.MAX_MEMORY_USAGE_PER_FILE = amount;
         }
         int get_max_memory_usage() { return _settings.MAX_MEMORY_USAGE_PER_FILE;};
+
+        unsigned int get_critical_loss_packet_percentage(){
+            return _settings.CRITICAL_LOSS_PACKET_PERCENTAGE;
+        }
+        bool set_critical_loss_packet_percentage(unsigned int amount){
+            _settings.CRITICAL_LOSS_PACKET_PERCENTAGE = amount;
+        }
+
+                unsigned int get_satisfactory_loss_packet_percentage(){
+            return _settings.SATISFACTORY_LOSS_PACKET_PERCENTAGE;
+        }
+        bool set_satisfactory_loss_packet_percentage(unsigned int amount){
+            _settings.SATISFACTORY_LOSS_PACKET_PERCENTAGE = amount;
+        }
         // TODO: Should fix port code to account for conflict
 
         void set_defaults(){
@@ -117,6 +138,8 @@ class UDTPSetup{
             _settings.MAX_NUMBER_OF_FLOW_SOCKETS = DEFAULT_MAX_NUMBER_OF_FLOW_SOCKETS;
             _settings.MAX_NUMBER_OF_FILE_THREADS  = DEFAULT_MAX_NUMBER_OF_FILE_THREADS;
             _settings.MAX_MEMORY_USAGE_PER_FILE = DEFAULT_MAX_MEMORY_USAGE_PER_FILE;
+            _settings.CRITICAL_LOSS_PACKET_PERCENTAGE = DEFAULT_CRITICAL_LOSS_PACKET_PERCENTAGE;
+            _settings.SATISFACTORY_LOSS_PACKET_PERCENTAGE = DEFAULT_SATISFACTORY_LOSS_PACKET_PERCENTAGE;
         }
 
     private:

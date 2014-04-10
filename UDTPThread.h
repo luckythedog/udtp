@@ -15,7 +15,11 @@ class UDTPThread{
         return _alive;
     }
     bool kill(){
+        if(is_alive()){
         _alive = false;
+        _myUDTP = NULL;
+        pthread_cancel(_threadHandler);
+        }
         return true;
     }
         bool get_thread_type() { return  _threadType;};

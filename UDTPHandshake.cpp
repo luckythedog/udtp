@@ -16,11 +16,35 @@
     }
  /***************************************************************************************************/
 bool UDTPHandshake::pack(){
-    return true;
+    /*Packing into raw! Getting ready to send! get_raw_buffer() will be used by send_listen_data()*/
+        switch(get_response_code()){
+        case ResponseStart:
+        break;
+        case ResponseNone:
+        break;
+        case ResponseApproved:
+        break;
+        case ResponseCriticalError:
+        break;
+    }
+    return false;
 }
  /**********************************************/
 bool UDTPHandshake::unpack(){
-    return true;
+    /*I would've added the serialization code from previous heavy commit but I didn't want to mess things up!*/
+    /*Justin serialization goes here!*/
+    switch(get_response_code()){
+        case ResponseStart:
+        break;
+        case ResponseNone:
+        break;
+        case ResponseApproved:
+        break;
+        case ResponseCriticalError:
+        break;
+    }
+
+    return false;
 }
  /**********************************************/
 bool UDTPHandshake::respond(){
@@ -51,13 +75,13 @@ bool UDTPHandshake::respond(){
 
 
 bool UDTPHandshake::compare_settings(){
-        if(versionNumber != _myUDTP->get_setup()->get_version()) {
+        if(versionNumber != _myUDTP->setup()->get_version()) {
                         return false;
         }
-        if(chunkSizeAgreement < _myUDTP->get_setup()->get_min_chunk_size()) {
+        if(chunkSizeAgreement < _myUDTP->setup()->get_min_chunk_size()) {
                         return false;
         }
-        if(chunkSizeAgreement > _myUDTP->get_setup()->get_max_chunk_size()) {
+        if(chunkSizeAgreement > _myUDTP->setup()->get_max_chunk_size()) {
             return false;
         }
         return true;

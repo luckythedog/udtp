@@ -13,6 +13,7 @@
 class UDTPHeader;
 class UDTPPacket;
 class UDTPSetup;
+class UDTPAcknowledge;
 class UDTP;
 
 class UDTPFile{
@@ -28,7 +29,7 @@ class UDTPFile{
         bool set_info_to_zero(); /*Sets info to zero to prepare the UDTPFile to be engulfed by the UDTPHeader for pull*/
         bool retrieve_info_from_local_file();  /*Retrieves info from fstream to prepare the UDTPFile to be engulfed by the UDTPHeader for push*/
     /********************************/
-        bool start_file_processing();
+        bool begin_file_processing();
         bool end_file_processing();
     /********************************/
         bool add_file_thread(ThreadType type);
@@ -55,10 +56,8 @@ class UDTPFile{
         bool set_peer(UDTPPeer* myPeer){ _myPeer = myPeer;};
         UDTPPeer* peer() {return _myPeer;};
 
-       bool write_mmap(){
-       }
-       bool read_mmap(){
-       }
+       bool write_mmap(UDTPChunk* chunk);
+       UDTPChunk* read_mmap(unsigned int chunkID);
 
         bool add_outgoing_chunk(UDTPChunk* newChunk){ /*Outgoing chunks are added from the UDTPFile themselves*/
             _outgoingChunks.push(newChunk);
@@ -88,11 +87,21 @@ class UDTPFile{
         }
         bool set_approved_header(bool newbool) { _hasApprovedHeader = newbool;};
         bool is_approved_header() { return _hasApprovedHeader;};
-        std::vector<bool> get_chunks_completed_queue(){
+        std::vector<unsigned char> get_chunks_completed_queue(){
             return _chunksCompleted;
         }
-bool set_complete_to(unsigned int chunkID);
-bool set_complete_to_none();
+
+bool empty_all_chunk_status();
+bool get_chunk_status(unsigned int chunkID, ChunkCode chunkCode){
+    if(_chunksCompleted[chunkID] & (0x01 << chunkCode)) return true;
+    return false;
+}
+bool set_chunk_status(unsigned int chunkID,  ChunkCode chunkCode){
+    _chunksCompleted[chunkID] |= (0x01 << chunkCode);
+    if(chunkCode == DONE) _chunksCompletedCount++;
+     return true;
+}
+
         bool set_approver(bool newbool){ _approver = newbool;};
         bool is_approver() { return _approver;};
 bool set_max_queue_length_from_setup();
@@ -100,6 +109,9 @@ unsigned short get_max_queue_length() { return _maxQueueLength;};
 bool get_current_chunk() { return _currentChunk;};
 void increment_current_chunk() { _currentChunk++;};
 ThreadType get_thread_type();
+int set_all_empty_chunks_to_whine();
+int get_chunks_whine();
+int verify_completion();
     private:
     UDTP* _myUDTP;
         UDTPPeer* _myPeer;
@@ -117,7 +129,8 @@ ThreadType get_thread_type();
         std::queue<UDTPChunk*> _outgoingChunks;
         std::queue<unsigned int> _missingIncomingChunks;
         std::queue<unsigned int> _missingOutgoingChunks;
-        std::vector<bool> _chunksCompleted;
+        unsigned int _chunksCompletedCount;
+        std::vector<unsigned char> _chunksCompleted;
         unsigned short _maxQueueLength;
         bool _hasApprovedHeader; /*Starts out with false. Waits until it receives an approved header.*/
         bool _active; /*Sets the file in activity*/

@@ -5,6 +5,14 @@
 #include "UDTPPacket.h"
 class UDTPData;
 class UDTPAcknowledge;
+enum ChunkCode{
+    EMPTY = 0x00,
+    WHINE = 0x01,
+    DONE = 0x02
+};
+
+
+
 class UDTPChunk : public UDTPPacket{
     public:
         UDTPChunk(UDTPPacketHeader header);
@@ -24,12 +32,14 @@ class UDTPChunk : public UDTPPacket{
         bool get_verified() { return _isVerified;};
         bool set_verified(bool isVerified) { _isVerified = isVerified;};
 
-        bool set_receiving_address(sockaddr_in receivingAddress){
-            _receivingAddress = receivingAddress;
+        bool set_receive_address(sockaddr_in receiveAddress){
+            _receiveAddress = receiveAddress;
         }
-        sockaddr_in get_receiving_address(){
-            return (_receivingAddress);
+        sockaddr_in get_receive_address(){
+            return (_receiveAddress);
         }
+
+
 
         /* must impliment pure virtual functions */
         char* get_raw_buffer();
@@ -39,7 +49,7 @@ class UDTPChunk : public UDTPPacket{
 
 
     private:
-        sockaddr_in _receivingAddress;
+        sockaddr_in _receiveAddress;
         char* _chunkBuffer; /*This is the raw chunk*/
         unsigned short _fileID;
         unsigned short _chunkID;

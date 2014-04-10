@@ -42,6 +42,7 @@ class UDTPPeer;
 class UDTPChunk;
 /*Threads!*/
 class UDTPThreadFlow;
+struct UDTPFileID;
 
 enum SocketType
 {
@@ -94,17 +95,13 @@ public:
     UDTPPeer* self_peer() { return _listPeers[0];}; /*Gets self peer which is stored at zero.*/
     int find_peer_using_address(sockaddr_in searchAddress);
 
-    bool send_listen_data(UDTPPacket* packet); /*Starts listen*/
-
     SocketType get_socket_type();
     bool alive();
 
     TransferReturn send_file(std::string path);
     TransferReturn get_file(std::string path);
-    UDTPFile* get_file_by_id(unsigned int fileID);
 
-    bool add_file_to_active(UDTPFile* file);
-    bool add_file_to_pending(UDTPFile* file);
+
     bool approve_pending_file(UDTPHeader* compare); /*Approves a pending file and gives it a new ID from HOST*/
     static void* listenThread(void *args);
     static void* flowThread(void*);
@@ -113,7 +110,6 @@ public:
     static void* flowQueueThread(void* args); /*Processes Recv()'d chunks to identify them!*/
 
     void add_queue_listen(UDTPPacket* packet);
-    void add_queue_flow(UDTPChunk* chunk);
 
     void display_msg(std::string message); /*Displays message on console*/
     bool stop(); /*Stop server/client. This will eject anything and everything no matter what.*/
@@ -128,10 +124,11 @@ public:
         return _fileIDCount;
     }
 
-    UDTPSetup* get_setup() {
+    UDTPSetup* setup() {
         return &_myUDTP;
     }
-
+    bool add_file_to_list(UDTPFile* file);
+    UDTPFile* get_file_with_id(unsigned int fileID);
 private:
 
 
@@ -142,10 +139,7 @@ private:
     /*Mutexes*/
     pthread_mutex_t _mutexFlowThread;
     pthread_mutex_t _mutexPeer;
-    pthread_mutex_t _mutexActiveFiles;
-    pthread_mutex_t _mutexPendingFiles;
     sem_t _semListenPacketQueue;
-    sem_t _semFlowPacketQueue;
 
 
     pthread_t _listenThreadHandler; /*There will be only one primary listen thread*/
@@ -160,8 +154,8 @@ private:
     unsigned int _flowSocket; /*Holds UDP socket!*/
     std::queue<UDTPPacket*> _listenPacketQueue;
     std::queue<UDTPChunk*> _flowPacketQueue;
-    std::vector<UDTPFile*> _activeFiles;
-    std::vector<UDTPFile*> _pendingFiles;
+    std::vector<UDTPFile*> _overallFiles; /*Even the ones that are inactive!*/
+
     /*Current file count*/
     unsigned int _flowThreadCount;
     unsigned int _fileIDCount;

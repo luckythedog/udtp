@@ -3,6 +3,7 @@
 /*Implementations after forward class declaration*/
 #include "UDTPHeader.h"
 #include "UDTP.h"
+#include "UDTPAcknowledge.h"
 #include <pthread.h>
 /*Setup*/
 #include "UDTPSetup.h"
@@ -12,19 +13,20 @@ UDTPFile::UDTPFile() /*Coming from far away! It */
     set_defaults();
     // TODO
 }
- bool UDTPFile::set_defaults(){
-        _currentChunk = 0;
-         _errorMsg = ""; /*Blank!*/
-         _hasApprovedHeader= false;
-        _critError = false;
-        _active = false;
-        return true;
- }
+bool UDTPFile::set_defaults()
+{
+    _currentChunk = 0;
+    _errorMsg = ""; /*Blank!*/
+    _hasApprovedHeader= false;
+    _critError = false;
+    _active = false;
+    return true;
+}
 UDTPFile::UDTPFile(std::string path) /*Coming locally!*/
 {
-        set_defaults();
-        _path = path;
-        _active = false;
+    set_defaults();
+    _path = path;
+    _active = false;
 
 }
 UDTPFile::~UDTPFile()
@@ -59,112 +61,157 @@ bool UDTPFile::unpack_from_header(UDTPHeader& header) /*Takes all information fr
     _transferType = header.get_header_type();
     return true;
 }
-bool UDTPFile::pack_to_header(UDTPHeader& header){
+bool UDTPFile::pack_to_header(UDTPHeader& header)
+{
     header.set_number_of_chunks(get_number_of_chunks());
     header.set_size_of_file(get_size_of_file());
     header.set_file_id(get_file_id());
     header.set_header_type(_transferType);
 }
-bool UDTPFile::set_chunk_size_from_setup(){
-    _chunkSize = _myUDTP->get_setup()->get_chunk_size_agreement();
+bool UDTPFile::set_chunk_size_from_setup()
+{
+    _chunkSize = _myUDTP->setup()->get_chunk_size_agreement();
     return true;
 }
-bool UDTPFile::set_max_queue_length_from_setup(){
-    _maxQueueLength = _myUDTP->get_setup()->get_max_memory_usage() / _myUDTP->get_setup()->get_chunk_size_agreement();
+bool UDTPFile::set_max_queue_length_from_setup()
+{
+    _maxQueueLength = _myUDTP->setup()->get_max_memory_usage() / _myUDTP->setup()->get_chunk_size_agreement();
     return true;
 }
-bool UDTPFile::add_file_thread(ThreadType type){
-    if(active() && _fileThreads.size() < _myUDTP->get_setup()->get_max_number_of_file_threads()){
-    pthread_t newFileThread;
-    UDTPThreadFile* fileThread = new UDTPThreadFile(newFileThread, type);
-    pthread_create(&newFileThread, NULL, UDTPFile::fileThread, (UDTPThreadFile*) fileThread);
-    pthread_tryjoin_np(newFileThread, NULL);
-    _fileThreads.push(fileThread);
+bool UDTPFile::add_file_thread(ThreadType type)
+{
+    if(active() && _fileThreads.size() < _myUDTP->setup()->get_max_number_of_file_threads())
+    {
+        pthread_t newFileThread;
+        UDTPThreadFile* fileThread = new UDTPThreadFile(newFileThread, type);
+        pthread_create(&newFileThread, NULL, UDTPFile::fileThread, (UDTPThreadFile*) fileThread);
+        pthread_tryjoin_np(newFileThread, NULL);
+        _fileThreads.push(fileThread);
     }
 
 }
-bool UDTPFile::remove_file_thread(){
-    if(active() && _fileThreads.size() == _myUDTP->get_setup()->get_starting_number_of_file_threads()) return false;
-        if(!_fileThreads.empty()){
-            UDTPThreadFile* removeThread = _fileThreads.front();
-            removeThread->kill();
-            pthread_cancel(removeThread->get_thread_handler());
-            return true;
-        }
-        return false;
+bool UDTPFile::remove_file_thread()
+{
+    if(active() && _fileThreads.size() == _myUDTP->setup()->get_starting_number_of_file_threads()) return false;
+    if(!_fileThreads.empty())
+    {
+        UDTPThreadFile* removeThread = _fileThreads.front();
+        removeThread->kill();
+        pthread_cancel(removeThread->get_thread_handler());
+        return true;
+    }
+    return false;
 }
-bool UDTPFile::set_complete_to_none(){
+bool UDTPFile::empty_all_chunk_status()
+{
+    _chunksCompletedCount = 0;
     if(_chunksCompleted.size() !=0) _chunksCompleted.clear();
-    for(unsigned int i=0; i<_numberOfChunks; i++){
+    for(unsigned int i=0; i<_numberOfChunks; i++)
+    {
+        unsigned char emptyCode = 0x00;
+        emptyCode |= (0x01 << EMPTY);
         _chunksCompleted.push_back(false);
     }
 }
-bool UDTPFile::set_complete_to(unsigned int chunkID){
-    _chunksCompleted[chunkID] = true;
-    return true;
-}
-ThreadType UDTPFile::get_thread_type(){
-        if(is_approver() && _transferType == Pull) return OUTGOING; /*You will be pushing since you approved a pull!*/
-        if(!is_approver() && _transferType == Pull) return INCOMING; /*Get ready to read in!*/
 
-        if(is_approver() && _transferType == Push) return INCOMING; /*Some PEER is asking to send you a file! better get ready to recv!()*/
-        if(!is_approver() && _transferType == Push) return OUTGOING;  /*You are PEER and you're going to send a file!*/
+ThreadType UDTPFile::get_thread_type()
+{
+    if(is_approver() && _transferType == Pull) return OUTGOING; /*You will be pushing since you approved a pull!*/
+    if(!is_approver() && _transferType == Pull) return INCOMING; /*Get ready to read in!*/
+
+    if(is_approver() && _transferType == Push) return INCOMING; /*Some PEER is asking to send you a file! better get ready to recv!()*/
+    if(!is_approver() && _transferType == Push) return OUTGOING;  /*You are PEER and you're going to send a file!*/
 }
-bool UDTPFile::start_file_processing(){
+bool UDTPFile::begin_file_processing()
+{
     if(!is_approved_header()) return false;
     if(check_error()) return false;
     ThreadType threadType = get_thread_type();
-    if(threadType == OUTGOING){
-        if(sem_init(&_semFileThread,0,get_number_of_chunks()) != 0) return false;
+    if(threadType == OUTGOING)
+    {
+        if(sem_init(&_semFileThread,0,get_number_of_chunks()) != 0) return false; /*Load enough semaphore tickets for outgoing!*/
     }
-    if(threadType == INCOMING){
+    if(threadType == INCOMING)
+    {
         if(sem_init(&_semFileThread,0,0) !=0) return false;
     }
-    set_complete_to_none();
-    for(unsigned int i=0; i<_myUDTP->get_setup()->get_starting_number_of_file_threads(); i++){
-            add_file_thread(threadType);
+    empty_all_chunk_status();
+    for(unsigned int i=0; i<_myUDTP->setup()->get_starting_number_of_file_threads(); i++)
+    {
+        add_file_thread(threadType);
     }
 
     _active = true;
     return true;
 }
 
-bool UDTPFile::end_file_processing(){
+bool UDTPFile::end_file_processing()
+{
     while(remove_file_thread()); /*Remove all file threads!*/
     _active = false;
 }
 
-void* UDTPFile::fileThread(void* args){
-    UDTPThreadFile* fileThread = (UDTPThreadFile*) args;
-    while(fileThread->is_alive() && fileThread->get_thread_type() == INCOMING){
-
-
-        while(!fileThread->file()->get_incoming_chunk_queue().empty()){
-                fileThread->file()->get_incoming_chunk_queue().pop();
+int UDTPFile::set_all_empty_chunks_to_whine(){ /*Usually activated by acknowledgement!*/
+    for(unsigned int i=0; i<_numberOfChunks; i++){
+        if(!get_chunk_status(i,  DONE) && !get_chunk_status(i,  WHINE)) {
+            set_chunk_status(i, WHINE); /*Set it to whine!*/
         }
-
-
-
     }
-    while(fileThread->is_alive() && fileThread->get_thread_type() == OUTGOING){
-    /***********Handles missing chunk*********************/
-    //It should only be on the outgoing file threads since it is not recv()'s fault!
-    sem_wait(&fileThread->file()->_semFileThread);
-        if( (fileThread->file()->get_outgoing_chunk_queue().size()) >= fileThread->file()->get_max_queue_length()){
-                    fileThread->file()->remove_file_thread();
-        }else{
-                           fileThread->file()->add_file_thread( fileThread->file()->get_thread_type() );
+    return -1; /*-1 means all empty chunks are set to whine!!*/
+    /*Check chunks first!*/
+}
+
+int UDTPFile::get_chunks_whine(){ /*Gets all the whine chunks that are not done!*/
+    for(unsigned int i=0; i<_numberOfChunks; i++){
+        if(get_chunk_status(i,  WHINE) && !get_chunk_status(i,  DONE)) {
+            return i;
         }
-        if(!fileThread->file()->get_missing_outgoing_chunk_queue().empty()){
-            //UDTPChunk* missingChunk = read_mmap((unsigned int)get_missing_chunk_queue().front());
-            //outgoingChunks.push(missingChunk);
+    }
+    return -1;
+}
+int UDTPFile::verify_completion(){
+        for(unsigned int i=0; i<_numberOfChunks; i++){
+        if(!get_chunk_status(i,  DONE)) {
+            return i;
         }
-        if( fileThread->file()->get_current_chunk()!= fileThread->file()->get_number_of_chunks() &&
-              (fileThread->file()->get_outgoing_chunk_queue().size()) < fileThread->file()->get_max_queue_length()){
-                  //read_mmap();
-                 // set_complete_to( chunkID);
-                    fileThread->file()->increment_current_chunk();
+    }
+
+    end_file_processing(); /*File is completed!*/
+    return -1;
+}
+void* UDTPFile::fileThread(void* args)
+{
+    UDTPThreadFile* fileThread = (UDTPThreadFile*) args;
+    UDTPFile* processFile = fileThread->file();
+    while(fileThread->is_alive() && fileThread->get_thread_type() == INCOMING)
+    {
+        sem_wait(&processFile->_semFileThread);
+        while(!processFile->get_incoming_chunk_queue().empty())
+        {
+            UDTPChunk* processChunk = processFile->get_incoming_chunk_queue().front();
+            unsigned int processChunkID = processChunk->get_chunk_id();
+            if(!processFile->get_chunk_status(processChunkID, DONE)) /*Make sure it isn't completed already!*/
+            {
+                if(processFile->write_mmap(processChunk) == true)  /*Write it!*/
+                {
+                    processFile->get_chunk_status(processChunkID, DONE);
+                }
+                else
+                {
+                    /*Request missing chunks here!*/
+                }
+                processFile->get_incoming_chunk_queue().pop();
+            }
         }
+    }
+
+
+
+    while(fileThread->is_alive() && fileThread->get_thread_type() == OUTGOING)
+    {
+        /***********Handles missing chunk*********************/
+        //It should only be on the outgoing file threads since it is not recv()'s fault!
+        sem_wait(&fileThread->file()->_semFileThread);
 
 
     }
@@ -192,9 +239,23 @@ bool UDTPFile::retrieve_info_from_local_file()  /*Retrieves critical information
 
     return true;
 }
-        void UDTPFile::error_msg(){
-            if(_errorMsg != ""){
-                _myUDTP->display_msg(_errorMsg);
-                _errorMsg = "";
-            }
-        }
+void UDTPFile::error_msg()
+{
+    if(_errorMsg != "")
+    {
+        _myUDTP->display_msg(_errorMsg);
+        _errorMsg = "";
+    }
+}
+bool UDTPFile::write_mmap(UDTPChunk* chunk)
+{
+    /*Writing goes here!*/
+
+    delete chunk;
+    return true;
+}
+UDTPChunk* UDTPFile::read_mmap(unsigned int chunkID)
+{
+    /*Reading goes here!*/
+    return NULL;
+}

@@ -32,6 +32,8 @@ SocketReturn UDTP::start(SocketType socketType)
 
     socketType == HOST ? display_msg("HOST has successfully completed socket setup.") : display_msg("HOST has successfully completed socket setup.");
     unsigned int peerID = add_peer(_listenSocket); /*Add self as socket. Doesn't matter if you're server or client!*/
+    self_peer()->set_unique_id(0); /*self peer has unique_id of zero*/
+    socketType == HOST ? self_peer()->set_host_local(true): self_peer()->set_host_local(false);
     self_peer()->set_init_process_complete(MUTEX_FRAMEWORK_INIT);
     self_peer()->set_init_process_complete(LISTEN_SOCKET);
 
@@ -48,7 +50,7 @@ bool UDTP::start_listen_socket(SocketType bindType)
     if(_listenSocket < 0) return false;
     struct sockaddr_in listenAddress; /*TCP Struct address!*/
     memset(&listenAddress, 0, sizeof(listenAddress));
-    listenAddress.sin_port = htons(get_setup()->get_port());
+    listenAddress.sin_port = htons(setup()->get_port());
     listenAddress.sin_family = AF_INET;
 
 
@@ -60,7 +62,7 @@ bool UDTP::start_listen_socket(SocketType bindType)
         if(listen(_listenSocket,0) < 0) return false;
         break;
     case PEER:
-        listenAddress.sin_addr.s_addr = inet_addr(get_setup()->get_ip());
+        listenAddress.sin_addr.s_addr = inet_addr(setup()->get_ip());
         if(connect(_listenSocket, (struct sockaddr*)&listenAddress, sizeof(struct sockaddr_in)) < 0) return false;
         break;
     }
@@ -73,49 +75,14 @@ bool UDTP::start_listen_socket(SocketType bindType)
         }
     return true;
 }
-bool UDTP::add_flow_thread(ThreadType threadType, unsigned int peerID)
-{
-    UDTPPeer* accessPeer = get_peer(peerID); /*So we only have to run get peer one time!*/
-    if(accessPeer->is_online())  return false;
-    unsigned int flowSocket;
-    flowSocket = socket(AF_INET, SOCK_DGRAM, 0);
-    if(flowSocket <0) return false;
-    int optval = 1;
-    if((setsockopt(flowSocket, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval))) < 0) return false;
-    struct sockaddr_in flowAddress = get_peer(peerID)->get_address();
 
-    if( (bind(flowSocket, (struct sockaddr*)&flowAddress, sizeof(flowAddress))) < 0 )
-    {
-        perror("udp-bind");
-        return false;
-    }
-    pthread_t flowThreadHandler;
-    UDTPThreadFlow *newFlowThread = new UDTPThreadFlow((UDTP*)this, flowThreadHandler, flowSocket, threadType);
-    pthread_create(&flowThreadHandler, NULL, UDTP::flowThread, (UDTPThreadFlow*)newFlowThread);
-    pthread_tryjoin_np(flowThreadHandler, NULL);
-
-    get_peer(peerID)->assign_flow_thread(newFlowThread);
-    _flowThreadCount++;
-    return true;
-}
-bool UDTP::remove_flow_thread(unsigned int peerID)
-{
-    UDTPThreadFlow *removeThread = get_peer(peerID)->front_flow_thread();
-    removeThread->kill();
-    close(removeThread->flow_socket());
-    removeThread = NULL;
-    _flowThreadCount--;
-    return true;
-}
 bool UDTP::start_mutex()
 {
     display_msg("Mutex have been started");
     if (pthread_mutex_init(&_mutexFlowThread, NULL) != 0) return false;
     if (pthread_mutex_init(&_mutexPeer, NULL) != 0) return false;
-    if(pthread_mutex_init(&_mutexActiveFiles, NULL) != 0) return false;
-        if(pthread_mutex_init(&_mutexPendingFiles, NULL) != 0) return false;
     if(sem_init(&_semListenPacketQueue,0,0) != 0) return false;
-    if(sem_init(&_semFlowPacketQueue,0,0)  != 0) return false;
+
 
     return true;
 }
@@ -126,26 +93,11 @@ bool UDTP::stop()
 
 }
 
-bool UDTP::send_listen_data(UDTPPacket* packet)
-{
-    if(get_socket_type() == PEER) display_msg("PEER has sent out data using send_listen_data()");
-    if(get_socket_type() == HOST) display_msg("HOST has sent out data using send_listen_data()");
-    if(packet->get_response_code() != ResponseNone){ /*If it is not ResponseNone, it will need to undergo a unique_id check! That is fine since unique_id is applied automatically from read()*/
-    if(get_peer(packet->get_peer_id())->get_unique_id() != packet->get_unique_id() ) {
-        display_msg("PACKET WILL NOT SEND: Packet's unique ID does not match with PEER's unique ID. This PEER may have disconnected (and removed from polling and peer list) and this packet was assigned that PEER's last position.");
-        return false;
-    }
-    }
-    send(packet->get_socket_id(), packet->get_raw_buffer(), packet->get_packet_size(), 0); /*The UDTPPAclet's socket id is used to denote where to send the packet. The socket id is handled in the polling threads. For HOSTS, the socket id
-                                                                                                                    will be the receiving socket's file descriptor. For PEER, it will always be its own _listenSocket being that that is where the central receiving and sending
-                                                                                                                    happens.*/
-    return true;
-}
 unsigned int UDTP::add_peer(unsigned int listenSocketOfPeer)
 {
     unsigned int posID = 0;
     pthread_mutex_lock(&_mutexPeer); /*Adds a lock just in case*/
-    UDTPPeer* newPeer = new UDTPPeer(listenSocketOfPeer);
+    UDTPPeer* newPeer = new UDTPPeer((UDTP*)this, listenSocketOfPeer);
     newPeer->set_online();
     _listPeers.push_back(newPeer);
     posID = _listPeers.size() - 1; /*Capacity minus 1!*/
@@ -207,37 +159,13 @@ bool UDTP::remove_peer(unsigned int posID)
     pthread_mutex_unlock(&_mutexPeer);
     return true;
 }
-UDTPFile* UDTP::get_file_by_id(unsigned int fileID)
-{
-    pthread_mutex_lock(&_mutexActiveFiles);
-    for(unsigned int i=0; i<_activeFiles.size(); i++)
-    {
-        if(_activeFiles[i]->get_file_id() == fileID)
-        {
-            pthread_mutex_unlock(&_mutexActiveFiles);
-            return _activeFiles[i];
-        }
-    }
-    pthread_mutex_unlock(&_mutexActiveFiles);
-    return NULL;
-
-}
-    bool UDTP::add_file_to_active(UDTPFile* file){
-        _activeFiles.push_back(file);
-    }
-    bool UDTP::add_file_to_pending(UDTPFile* file){
-        _pendingFiles.push_back(file);
-    }
   bool UDTP::approve_pending_file(UDTPHeader* compare){
   }
 void UDTP::add_queue_listen(UDTPPacket* packet){
     display_msg("Packet was added to request queue!");
     _listenPacketQueue.push(packet);
 }
-void UDTP::add_queue_flow(UDTPChunk* chunk){
-    display_msg ("Chunk was sent to request queue!");
-    _flowPacketQueue.push(chunk);
-}
+
 void* UDTP::listenQueueThread(void* args){ /*This will handle all listen packets*/
     UDTP *accessUDTP = (UDTP*) args;
     while(accessUDTP->alive()){
@@ -292,22 +220,20 @@ void* UDTP::listenThread(void* args)
                     newPollFd.events = POLLIN;
                     activeListenSockets.push_back(newPollFd);
                     /*Add to peers list. Both Pollfd and _listPeer are Parallel..*/
+                    accessUDTP->_uniqueIDCount++;
                     unsigned int newPeerID = accessUDTP->add_peer(newPeerListenSocket);
-
                     accessUDTP->get_peer(newPeerID)->set_address(newPeerAddress);
                     accessUDTP->get_peer(newPeerID)->set_unique_id(accessUDTP->_uniqueIDCount);
-                    accessUDTP->_uniqueIDCount++;
-
+                    accessUDTP->get_peer(newPeerID)->set_host_local(true);
                     UDTPHandshake handshakeStart(ResponseStart); /*Send this handshake request to client so he will start activate the function: send_required_packets();*/
                     handshakeStart.set_socket_id(newPeerListenSocket); /*Take socket id! so the send_listen_data function will know where to send it to!*/
                     handshakeStart.set_peer_id(newPeerID);
+                    handshakeStart.set_unique_id(accessUDTP->_uniqueIDCount);
                     // TODO: Might want to refactor this code
                     accessUDTP->display_msg("HOST has sent out a HandshakeStart to notify new peer to use function");
 
                     handshakeStart.pack();
-                    accessUDTP->send_listen_data(&handshakeStart); /*Send out Handshake start so the client knows to start the function send_required_packets()*/
-
-
+                     accessUDTP->get_peer(newPeerID)->send_to(&handshakeStart); /*Send out Handshake start so the client knows to start the function send_required_packets()*/
                 }
             }
             for(unsigned int i=1; i<activeListenSockets.size(); i++)
@@ -352,6 +278,7 @@ void* UDTP::listenThread(void* args)
                         if(deductionValid){
                             incomingData->set_socket_id(activeListenSockets[i].fd);
                             incomingData->set_peer_id(i);
+                            incomingData->set_peer(accessUDTP->get_peer(i));
                             incomingData->set_unique_id(accessUDTP->get_peer(i)->get_unique_id()); /*Set unique ID!*/
                             incomingData->set_udtp(accessUDTP); /*Pass on UDTP pointer*/
                             recv(accessUDTP->_listenSocket, (char*)incomingData->write_to_buffer(), incomingData->get_packet_size(), 0);
@@ -362,7 +289,7 @@ void* UDTP::listenThread(void* args)
                             if(incomingData->pack()) resendCheck |= (0x01 << 0x02); /*Pack it up again*/
 
                             if(resendCheck &  0x07){
-                                accessUDTP->send_listen_data(incomingData);
+                                incomingData->peer()->send_to(incomingData);
                             }
 
                             //sem_post(&accessUDTP->_semListenPacketQueue);
@@ -436,8 +363,7 @@ void* UDTP::listenThread(void* args)
                         }
                         if(deductionValid){
                             incomingData->set_socket_id(activeListenSockets[0].fd);
-                            incomingData->set_peer_id(0);
-                            incomingData->set_unique_id(accessUDTP->get_peer(0)->get_unique_id()); /*Set unique ID!*/
+                            incomingData->set_peer(accessUDTP->get_peer(0));
                             incomingData->set_udtp(accessUDTP); /*Pass on UDTP pointer*/
                             recv(accessUDTP->_listenSocket, (char*)incomingData->write_to_buffer(), incomingData->get_packet_size(), 0);
                             /*Verifying sending check!*/
@@ -447,7 +373,7 @@ void* UDTP::listenThread(void* args)
                             if(incomingData->pack()) resendCheck |= (0x01 << 0x02); /*Pack it up again*/
 
                             if(resendCheck &  0x07){
-                                accessUDTP->send_listen_data(incomingData);
+                                incomingData->peer()->send_from(incomingData); /*Sends from socket!*/
                             }
                         }
                         accessUDTP->display_msg("PEER has completed packet processing");
@@ -473,78 +399,14 @@ void* UDTP::listenThread(void* args)
 void UDTP::display_msg(std::string message)
 {
 
-    if(get_setup()->get_debug_enabled()) std::cout << message << std::endl;
+    if(setup()->get_debug_enabled()) std::cout << message << std::endl;
 }
 
-void* UDTP::flowQueueThread(void* args){ /*Open as many chunk queue threads as INCOMING flow threads*/
-    UDTP *accessUDTP = (UDTP*) args;
-    while(accessUDTP->alive()){
-        sem_wait(&accessUDTP->_semFlowPacketQueue);
-        UDTPChunk* processChunk;
-        UDTPFile* processFile;
-        while(!accessUDTP->_flowPacketQueue.empty()){
-            processChunk = accessUDTP->_flowPacketQueue.front();
-            accessUDTP->_flowPacketQueue.pop();
 
-           processFile =  accessUDTP->get_file_by_id(processChunk->get_file_id());
-           if(processFile == NULL){
-                accessUDTP->display_msg("Could not find file with chunk's file id!");
-           }else{
-                accessUDTP->display_msg("Chunk has been applied to file's queue!");
-                processFile->add_incoming_chunk(processChunk);
-           }
-        }
-    }
-    accessUDTP = NULL;
-
-}
-void* UDTP::flowThread(void* args)
-{
-
-    UDTPThreadFlow* myFlowThread = (UDTPThreadFlow*) args;
-    while(myFlowThread->is_alive() && myFlowThread->get_thread_type() == INCOMING)
-    {
-        struct sockaddr_in incomingAddress;
-        UDTPPacketHeader packetDeduction;
-        if((recvfrom(myFlowThread->flow_socket(), &packetDeduction, sizeof(UDTPPacketHeader), 0, (struct sockaddr*)&incomingAddress, (socklen_t*)sizeof incomingAddress)))
-        {
-            myFlowThread->udtp()->display_msg("Received Packet Header from Flow Thread");
-        UDTPPacket* incomingData = 0;
-        bool deductionVerified = true;
-            switch(packetDeduction.packetType)
-                {
-                    case Chunk:
-                                myFlowThread->udtp()->display_msg("Chunk received from Flow Thread");
-                                incomingData = new UDTPChunk(packetDeduction);
-                                recv(myFlowThread->flow_socket(), (char*)incomingData->write_to_buffer(), incomingData->get_packet_size(), 0);
-
-                    break;
-                    default:
-                            deductionVerified = false;
-                             myFlowThread->udtp()->display_msg("Could not identify packet within Flow Thread!");
-                    break;
-                }
-                if(deductionVerified){
-                    myFlowThread->udtp()->add_queue_flow((UDTPChunk*)incomingData);
-                    sem_post(&myFlowThread->udtp()->_semFlowPacketQueue);
-                    myFlowThread->udtp()->display_msg("Chunk has been sent to chunk queue for identification.");
-                }
-                    myFlowThread->udtp()->display_msg("Flow Thread has finished processing.");
-
-        }
-        poll(0,0,50);
-    }
-
-    while(myFlowThread->is_alive() && myFlowThread->get_thread_type() == OUTGOING){
-    }
-   delete myFlowThread;
-}
 bool UDTP::start_queue_threads(){
     pthread_create(&_listenPacketQueueThreadHandler, NULL, &UDTP::listenQueueThread, (UDTP*) this);
     pthread_tryjoin_np(_listenPacketQueueThreadHandler, NULL);
 
-    pthread_create(&_flowPacketQueueThreadHandler, NULL, &UDTP::flowQueueThread, (UDTP*)this);
-    pthread_tryjoin_np(_flowPacketQueueThreadHandler, NULL);
 
     self_peer()->set_init_process_complete(QUEUE_THREADS);
 
@@ -569,7 +431,21 @@ bool UDTP::alive()
 
     return _isAlive;
 }
+    UDTPFile* UDTP::get_file_with_id(unsigned int fileID){
+    for(unsigned int i=0; i<_overallFiles.size();i++){
+        if(_overallFiles[i]->get_file_id() == fileID){
+            return _overallFiles[i];
+        }
+    }
+    return NULL;
+}
+bool UDTP::add_file_to_list(UDTPFile* file)
+{ /*This adds a file to the log! No deleting or nothing!*/
+        _overallFiles.push_back(file);
+}
 
+
+/***************************PEER ONLY COMMANDS*************************************/
 TransferReturn UDTP::send_file(std::string path){
     if(!self_peer()->check_init_process(COMPLETE)) return SELF_NOT_READY;
     UDTPFile* sendFile = new UDTPFile(path);
@@ -584,7 +460,7 @@ TransferReturn UDTP::send_file(std::string path){
 
 
     requestFileSend->pack();
-    send_listen_data(requestFileSend);
+    self_peer()->send_from(requestFileSend);
     delete requestFileSend;
 }
 
@@ -600,8 +476,7 @@ TransferReturn UDTP::get_file(std::string path){
     UDTPHeader* requestFileGet = new UDTPHeader;
     getFile->pack_to_header(*requestFileGet); /*Packs it in!*/
 
-
     requestFileGet->pack();
-    send_listen_data(requestFileGet);
+    self_peer()->send_from(requestFileGet);
     delete requestFileGet;
 }

@@ -18,6 +18,10 @@ class UDTPThreadProcess : public UDTPThread{ /*This thread, which is not bound b
             _queueFailedChunkID.push(queueFailedChunkID);
         }
 
+        ~UDTPThreadProcess(){
+            _peer = NULL;
+        }
+
         UDTPChunk next_chunk(){
             return _queueChunks.front();
         }
@@ -25,15 +29,20 @@ class UDTPThreadProcess : public UDTPThread{ /*This thread, which is not bound b
             _queueChunks.pop();
             return true;
         }
-        UDTPAcknowledge next_failed_chunk_as_acknowledge(){
 
-        }
+
         bool pop_failed_chunk(){
             _queueFailedPeerID.pop();
             _queueFailedChunkID.pop();
         }
-
+    bool set_peer(UDTPPeer* peer){
+        _peer = peer;
+    }
+    UDTPPeer* peer(){
+        return _peer;
+    }
     private:
+        UDTPPeer* _peer;
         std::queue<UDTPChunk> _queueChunks;
         std::queue<unsigned int> _queueFailedPeerID; /*Parallel!*/
         std::queue<unsigned int> _queueFailedChunkID;
