@@ -233,7 +233,7 @@ void* UDTP::listenThread(void* args)
                     accessUDTP->display_msg("HOST has sent out a HandshakeStart to notify new peer to use function");
 
                     handshakeStart.pack();
-                     accessUDTP->get_peer(newPeerID)->send_to(&handshakeStart); /*Send out Handshake start so the client knows to start the function send_required_packets()*/
+                    accessUDTP->get_peer(newPeerID)->send_to(&handshakeStart); /*Send out Handshake start so the client knows to start the function send_required_packets()*/
                 }
             }
             for(unsigned int i=1; i<activeListenSockets.size(); i++)

@@ -7,6 +7,16 @@
 class UDTPSetup;
 class UDTP;
 class UDTPPacketHeader;
+
+struct UDTPHandShakeData
+{
+    ResponseCode _responseCode;
+    unsigned short _versionNumber;
+    unsigned short _chunkSizeRequest;
+    unsigned short _chunkSizeAgreement;
+
+};
+
 class UDTPHandshake : public UDTPPacket{
     public:
     UDTPHandshake();
@@ -26,6 +36,7 @@ class UDTPHandshake : public UDTPPacket{
         bool unpack();
         bool respond();
     private:
+        UDTPHandShakeData _data;
         unsigned short versionNumber;
         unsigned short chunkSizeAgreement;
 };
